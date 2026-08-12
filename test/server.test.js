@@ -9,7 +9,7 @@ const FAKE_ITEMS = [{
   description: 'desc',
   language: 'JS',
   stars: 100,
-  todayStars: 5,
+  weeklyStars: 5,
   forks: 2,
 }];
 

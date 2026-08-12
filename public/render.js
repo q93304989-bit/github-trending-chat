@@ -24,7 +24,7 @@
         + '<div class="card-meta">'
         + (item.language ? '<span class="chip">' + escapeHtml(item.language) + '</span>' : '')
         + '<span>★ ' + fmt(item.stars) + '</span>'
-        + '<span class="today">今日 +' + fmt(item.todayStars) + '</span>'
+        + '<span class="today">本周 +' + fmt(item.weeklyStars) + '</span>'
         + '<span>⑂ ' + fmt(item.forks) + '</span>'
         + '</div></div></a>';
     }).join('');

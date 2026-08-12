@@ -19,10 +19,10 @@ test('cardsHtml renders one card with all fields', () => {
     description: 'hi',
     language: 'JS',
     stars: 10,
-    todayStars: 2,
+    weeklyStars: 2,
     forks: 3,
   }]);
   assert.match(html, /class="card"/);
   assert.match(html, /a\/b/);
-  assert.match(html, /今日 \+2/);
+  assert.match(html, /本周 \+2/);
 });
