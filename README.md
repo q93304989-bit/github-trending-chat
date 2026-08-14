@@ -6,6 +6,11 @@
 
 ![界面预览](docs/screenshot.png)
 
+## 宣传视频
+
+- [英文版 Promo（36s / 1080p）](https://github.com/q93304989-bit/github-trending-chat/releases/download/v1.0.0/github-trending-chat-en.mp4)
+- [中文版宣传片（36s / 1080p）](https://github.com/q93304989-bit/github-trending-chat/releases/download/v1.0.0/github-trending-chat-cn.mp4)
+
 ## 功能特性
 
 - **一键抓取**：点击按钮即可获取 GitHub Trending 每周榜（`since=weekly`）
