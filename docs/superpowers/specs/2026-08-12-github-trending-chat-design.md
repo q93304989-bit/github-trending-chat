@@ -56,8 +56,10 @@
 | `description` | 简介（可能为空） |
 | `language` | 主要语言（可能为空） |
 | `stars` | 总星标数（整数） |
-| `todayStars` | 今日新增星标（整数，解析 `X stars today`） |
+| `weeklyStars` | 本周新增星标（整数，解析 `X stars this week`） |
 | `forks` | fork 数（整数） |
+
+> 实测说明：GitHub Trending 每周榜页面当前显示的是 `X stars this week`（并非 “stars today”），且部分条目首链接为赞助页（`/sponsors/...`）。解析时仓库名取自 `<h2>` 内链接，描述取自带 `col-9` 类的 `<p>`，星标数取自 `/stargazers`、`/forks` 链接中 SVG 图标后的裸文本。
 
 ### 前端 `public/`
 
@@ -68,7 +70,7 @@
   - 点击按钮 → 插入“正在加载…”气泡 → 请求 `/api/trending`。
   - 成功 → 将加载气泡替换为项目卡片列表消息。
   - 失败 → 显示友好错误气泡。
-  - 卡片包含：排名、仓库名（链接）、简介、语言、今日新增星标、总星标、fork 数。
+  - 卡片包含：排名、仓库名（链接）、简介、语言、本周新增星标、总星标、fork 数。
 
 ## 5. 错误处理
 

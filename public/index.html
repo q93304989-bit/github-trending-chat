@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GitHub 本周热门</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="chat">
+    <header class="chat-header">
+      <h1>GitHub 本周热门</h1>
+      <p>抓取 github.com/trending 每周榜</p>
+    </header>
+    <div id="messages" class="messages" aria-live="polite"></div>
+    <footer class="chat-input">
+      <button id="trending-btn" type="button" class="btn">拉取本周热门</button>
+      <p class="hint">点击按钮获取 GitHub Trending 每周榜</p>
+    </footer>
+  </main>
+  <script src="render.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
