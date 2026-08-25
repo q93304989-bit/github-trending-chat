@@ -3,22 +3,50 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>GitHub 本周热门</title>
+  <meta name="description" content="GitHub 本周热门 · 复古终端风浏览器 —— 日/周/月榜一键同步，本地缓存离线兜底">
+  <meta name="theme-color" content="#050b07">
+  <title>GH-TRENDING // TERMINAL</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23050b07'/%3E%3Ctext x='5' y='22' font-family='monospace' font-size='16' fill='%2333ff88'%3E%26gt;_%3C/text%3E%3C/svg%3E">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main class="chat">
-    <header class="chat-header">
-      <h1>GitHub 本周热门</h1>
-      <p>抓取 github.com/trending 每周榜</p>
+  <!-- A1 · CRT power-on flash: pure CSS, self-hiding, reduced-motion safe -->
+  <div class="crt-power" aria-hidden="true"></div>
+
+  <main class="term" aria-label="GitHub Trending 终端">
+    <!-- B1 · indeterminate sync progress light bar -->
+    <div id="sync-progress" aria-hidden="true"></div>
+
+    <!-- fake terminal window titlebar -->
+    <header class="titlebar">
+      <span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span>
+      <span class="tb-title">gh-trending@localhost:3000 &mdash; zsh</span>
+      <button id="clear-btn" type="button" class="tbtn" title="清空屏幕">[ CLEAR ]</button>
     </header>
-    <div id="messages" class="messages" aria-live="polite"></div>
-    <footer class="chat-input">
-      <button id="trending-btn" type="button" class="btn">拉取本周热门</button>
-      <p class="hint">点击按钮获取 GitHub Trending 每周榜</p>
+
+    <!-- scrollback -->
+    <div id="messages" class="messages" role="tabpanel" aria-label="榜单内容" aria-live="polite"></div>
+
+    <!-- command bar -->
+    <footer class="cmdbar">
+      <div class="periods" role="tablist" aria-label="榜单周期">
+        <button type="button" class="pbtn" role="tab" aria-controls="messages" data-since="daily">[ DAILY ]</button>
+        <button type="button" class="pbtn" role="tab" aria-controls="messages" data-since="weekly" aria-selected="true">[ WEEKLY ]</button>
+        <button type="button" class="pbtn" role="tab" aria-controls="messages" data-since="monthly">[ MONTHLY ]</button>
+      </div>
+      <button id="sync-btn" type="button" class="tbtn accent" title="重新同步（快捷键 R）">[ SYNC ]</button>
+    </footer>
+
+    <!-- status line -->
+    <footer class="statusbar">
+      <span id="status-left">$ READY</span>
+      <span id="status-right">GH-TRENDING v2.0</span>
     </footer>
   </main>
+
   <script src="render.js"></script>
+  <!-- demo.js is promo-only: activates on #/demo/... hashes, inert in normal use -->
+  <script src="demo.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

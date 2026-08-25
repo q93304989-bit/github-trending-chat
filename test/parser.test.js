@@ -53,6 +53,15 @@ test('parseTrending extracts all fields', () => {
   assert.strictEqual(b.weeklyStars, 12);
 });
 
+test('parseTrending handles daily and monthly board labels', () => {
+  const daily = parseTrending(FIXTURE.replace(/stars this week/g, 'stars today'));
+  const monthly = parseTrending(FIXTURE.replace(/stars this week/g, 'stars this month'));
+  assert.strictEqual(daily[0].weeklyStars, 321);
+  assert.strictEqual(daily[1].weeklyStars, 12);
+  assert.strictEqual(monthly[0].weeklyStars, 321);
+  assert.strictEqual(monthly[1].weeklyStars, 12);
+});
+
 test('toInt strips non-digits', () => {
   assert.strictEqual(toInt('1,234'), 1234);
   assert.strictEqual(toInt(''), 0);
