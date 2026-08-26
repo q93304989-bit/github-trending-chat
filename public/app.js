@@ -92,10 +92,16 @@
 
   function typeText(node, text, cps, done) {
     if (REDUCED_MOTION) { node.textContent = text; if (done) done(); return; }
+    var host = node.parentElement;          // the .line hosting the caret
+    if (host) host.classList.add('typing'); // phosphor shimmer while typing
     var i = 0;
     var t = setInterval(function () {
       node.textContent = text.slice(0, ++i);
-      if (i >= text.length) { clearInterval(t); if (done) done(); }
+      if (i >= text.length) {
+        clearInterval(t);
+        if (host) host.classList.remove('typing');
+        if (done) done();
+      }
     }, Math.round(1000 / cps));
   }
 
@@ -423,6 +429,69 @@
     else if (k === '3') selectPeriod('monthly');
   });
 
+  /* ---------- boot sequence overlay (A0) ---------- */
+  // POST-style self-test lines + a block progress bar. Pure ceremony: it
+  // covers the first moments of the real boot underneath. Skipped entirely
+  // under reduced-motion (resolves immediately, overlay never created).
+  function playBootSequence() {
+    if (REDUCED_MOTION) return Promise.resolve();
+    return new Promise(function (resolve) {
+      var seq = document.createElement('div');
+      seq.className = 'boot-seq';
+      seq.setAttribute('aria-hidden', 'true');
+      var pre = document.createElement('div');
+      seq.appendChild(pre);
+      document.body.appendChild(seq);
+
+      var LINES = [
+        'GH-TRENDING TERMINAL v2.1',
+        '(c) phosphor systems',
+        '',
+        'POST .............. <b>OK</b>',
+        'MEMORY ............ <b>OK</b>',
+        'UPLINK ............ <b>OK</b>',
+        '',
+        'LOADING BOARD',
+      ];
+      var li = 0;
+      function nextLine() {
+        if (li >= LINES.length) { startBar(); return; }
+        var row = document.createElement('div');
+        row.className = 'bl';
+        row.innerHTML = LINES[li++];
+        pre.appendChild(row);
+        setTimeout(nextLine, 85);
+      }
+      function startBar() {
+        var gauge = document.createElement('div');
+        gauge.className = 'bl';
+        pre.appendChild(gauge);
+        var W = 20, p = 0;
+        var tick = setInterval(function () {
+          p += 3;
+          var filled = Math.min(Math.round(W * p / 100), W);
+          gauge.innerHTML = '<span class=\"bar\">' + repeatChar('\u2588', filled) + '</span>'
+            + '<span class=\"track\">' + repeatChar('\u2591', W - filled) + '</span> '
+            + '<span class=\"pct\">' + Math.min(p, 100) + '%</span>';
+          if (p >= 100) {
+            clearInterval(tick);
+            setTimeout(finish, 150);   // let 100% register before the reveal
+          }
+        }, 22);
+      }
+      function repeatChar(ch, n) {
+        var out = '';
+        for (var i = 0; i < n; i++) out += ch;
+        return out;
+      }
+      function finish() {
+        seq.classList.add('done');
+        setTimeout(function () { seq.remove(); resolve(); }, 190);
+      }
+      nextLine();
+    });
+  }
+
   /* ---------- boot ---------- */
   function boot() {
     // ISSUE-12: titlebar follows the real address instead of hardcoding :3000.
@@ -435,24 +504,30 @@
     } catch (e) {}
     updateTabs();
 
-    addLine('gh-trending --since=' + since, 'cmd-echo');
-    var bootLine = addLine('<span class="btxt"></span><span class="cursor">\u258A</span>', '');
-    // Static chrome goes in synchronously and above any later result block,
-    // so its late insertion can never yank the viewport past the leaderboard.
-    addHint();
-    typeText(bootLine.querySelector('.btxt'), 'terminal online \u00b7 phosphor display ready', 90, function () {
-      bootLine.classList.add('boot-ok');
-      bootLine.innerHTML = 'terminal online \u00b7 phosphor display ready';
-    });
-
     var cached = getCache(since);
-    if (cached) {
-      // Instant paint from local storage, then a quiet background refresh.
-      renderResult({ items: cached.items, updatedAt: cached.at, fromCache: true });
-      runSync(true);
-    } else {
-      runSync(false);
-    }
+
+    // The boot overlay covers the first moments; the visible chrome (typewriter
+    // line, hints, first board paint) waits for it, then focuses in via
+    // body.booted-gated animations. Under reduced-motion this is immediate.
+    playBootSequence().then(function () {
+      document.body.classList.add('booted');
+      addLine('gh-trending --since=' + since, 'cmd-echo');
+      var bootLine = addLine('<span class="btxt"></span><span class="cursor">\u258A</span>', '');
+      // Static chrome goes in synchronously and above any later result block,
+      // so its late insertion can never yank the viewport past the leaderboard.
+      addHint();
+      typeText(bootLine.querySelector('.btxt'), 'terminal online \u00b7 phosphor display ready', 90, function () {
+        bootLine.classList.add('boot-ok');
+        bootLine.innerHTML = 'terminal online \u00b7 phosphor display ready';
+      });
+      if (cached) {
+        // Instant paint from local storage, then a quiet background refresh.
+        renderResult({ items: cached.items, updatedAt: cached.at, fromCache: true });
+        runSync(true);
+      } else {
+        runSync(false);
+      }
+    });
   }
 
   boot();

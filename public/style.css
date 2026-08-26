@@ -226,39 +226,50 @@ body::after {
    prefers-reduced-motion rule above switches all of them off.
    ============================================================ */
 
-/* --- A1 · CRT power-on: a bright beam unfolds into the window ---- */
-.crt-power {
-  position: fixed; inset: 0; z-index: 60; pointer-events: none;
-  background: radial-gradient(ellipse at center,
-    #eafff2 0%, #9fffc9 55%, rgba(70, 224, 127, .85) 100%);
-  opacity: 0; /* base state = off, so reduced-motion shows nothing */
-  animation: crt-power-on .68s cubic-bezier(.23, 1, .32, 1) .05s both;
+/* --- A2 · chrome light-up: gated on body.booted (fired when the boot bar
+   completes) so the focus-in always lands right as the overlay clears --- */
+body.booted .titlebar  { animation: seg-focus .3s ease-out backwards; }
+body.booted .messages  { animation: seg-focus .3s ease-out .06s backwards; }
+body.booted .cmdbar    { animation: seg-focus .3s ease-out .12s backwards; }
+body.booted .statusbar { animation: seg-focus .3s ease-out .18s backwards; }
+@keyframes seg-focus {
+  0%   { opacity: 0; filter: blur(3px) brightness(2.4); }
+  55%  { opacity: 1; filter: blur(.5px) brightness(1.35); }
+  100% { opacity: 1; filter: blur(0) brightness(1); }
 }
-@keyframes crt-power-on {
-  0%   { transform: scale(.6, .004); opacity: 1; filter: brightness(2.6); }
-  38%  { transform: scale(1, .004);  opacity: 1; filter: brightness(2.6); }
-  72%  { transform: scale(1, 1);     opacity: .5; filter: brightness(1.5); }
-  100% { transform: scale(1, 1);     opacity: 0; filter: brightness(1); }
-}
+@keyframes rise-in { from { opacity: 0; transform: translateY(8px); } } /* reused by sync-head */
 
-/* --- A2 · chrome cascade: titlebar -> scrollback -> bars ---------- */
-.titlebar  { animation: rise-in .38s ease-out .08s both; }
-.messages  { animation: rise-in .38s ease-out .18s both; }
-.cmdbar    { animation: rise-in .38s ease-out .28s both; }
-.statusbar { animation: rise-in .38s ease-out .36s both; }
-@keyframes rise-in { from { opacity: 0; transform: translateY(8px); } }
+/* signal lock: one tiny electron jitter as the real UI takes over */
+.term { position: relative; }
+body.booted .term { animation: crt-lock .16s steps(2, jump-none) .1s backwards; }
+@keyframes crt-lock {
+  0% { transform: translateX(-3px) translateY(1px); }
+  50% { transform: translateX(2px); }
+  100% { transform: none; }
+}
 
 /* --- A4 · generic terminal line entrance -------------------------- */
-.messages .line { animation: line-in .16s ease-out both; }
+.messages .line { animation: line-in .16s ease-out backwards; }
 @keyframes line-in { from { opacity: 0; transform: translateY(4px); } }
+
+/* phosphor shimmer while the typewriter is mid-line */
+.messages .line.typing { animation: type-phosphor .16s steps(2) infinite; }
+@keyframes type-phosphor {
+  0% { text-shadow: 0 0 6px rgba(125, 255, 176, .45); }
+  100% { text-shadow: none; }
+}
 
 /* --- A3 · repo card waterfall (delay via --i injected by app.js) --- */
 .sync-head { animation: rise-in .28s ease-out both; }
 .repo.card-in {
-  animation: card-in .32s cubic-bezier(.22, 1, .36, 1) both;
-  animation-delay: calc(var(--i, 0) * 40ms);
+  animation: card-in .34s cubic-bezier(.22, 1, .36, 1) backwards;  /* backwards: hover keeps control after entry */
+  animation-delay: calc(var(--i, 0) * 32ms);
 }
-@keyframes card-in { from { opacity: 0; transform: translateY(10px); } }
+@keyframes card-in {
+  0%   { opacity: 0; transform: translateY(12px); filter: brightness(1.9); }
+  60%  { opacity: 1; transform: translateY(-1px); filter: brightness(1.2); }  /* overshoot + phosphor peak */
+  100% { transform: none; filter: none; }
+}
 
 /* --- D6 · board swap: old board fades before the new one cascades -- */
 .result-block { transition: opacity .13s ease, transform .13s ease; }
@@ -391,3 +402,20 @@ body.is-syncing #sync-btn { animation: btn-breathe 1.4s ease-in-out infinite; }
 /* --- D7 · statusbar flash on change ---------------------------------------- */
 #status-left.flash { animation: status-flash .55s ease-out; }
 @keyframes status-flash { 0% { color: var(--bright); text-shadow: var(--glow); } }
+/* --- A0 · boot sequence overlay: POST lines + block progress bar -------- */
+/* Created/removed by app.js. Skipped entirely under reduced-motion. */
+.boot-seq {
+  position: fixed; inset: 0; z-index: 70;
+  background: #020604;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font); font-size: 13.5px; line-height: 1.9;
+  color: var(--dim);
+  transition: opacity .18s ease;
+}
+.boot-seq.done { opacity: 0; }
+.boot-seq .bl { white-space: pre; animation: boot-line-in .1s ease-out backwards; }
+.boot-seq .bl b { color: var(--bright); text-shadow: var(--glow); font-weight: 700; }
+.boot-seq .bar { color: var(--bright); text-shadow: var(--glow); }
+.boot-seq .track { opacity: .3; }
+.boot-seq .pct { color: var(--amber); }
+@keyframes boot-line-in { from { opacity: 0; } }
