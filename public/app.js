@@ -18,7 +18,6 @@
   var PERIODS = ['daily', 'weekly', 'monthly'];
   var CACHE_KEY = 'ght.cache.v2';
   var SINCE_KEY = 'ght.since';
-  var THEME_KEY = 'ght.theme';
   // ISSUE-06: must exceed the backend worst case (~10s x2 tries + 700ms
   // pause = ~20.7s), or the client aborts requests the server is about to win.
   var FETCH_TIMEOUT_MS = 22000;
@@ -303,15 +302,6 @@
       .finally(function () { setBusy(false); });
   }
 
-  /* ---------- R-02 · phosphor theme ---------- */
-  function applyTheme(t) {
-    var amber = t === 'amber';
-    document.body.classList.toggle('theme-amber', amber);
-    var btn = document.getElementById('theme-btn');
-    if (btn) btn.textContent = amber ? '[ AMBER ]' : '[ GREEN ]';
-    try { localStorage.setItem(THEME_KEY, t); } catch (e) {}
-  }
-
   /* ---------- R-01 · vim-style cursor navigation ---------- */
   var cursorIndex = -1;
   function cardList() {
@@ -377,10 +367,6 @@
   clearBtn.addEventListener('click', clearScreen);
   periodBtns.forEach(function (b) {
     b.addEventListener('click', function () { selectPeriod(b.dataset.since); });
-  });
-  var themeBtn = document.getElementById('theme-btn');
-  if (themeBtn) themeBtn.addEventListener('click', function () {
-    applyTheme(document.body.classList.contains('theme-amber') ? 'green' : 'amber');
   });
 
   messagesEl.addEventListener('click', function (e) {
@@ -564,7 +550,6 @@
         if (PERIODS.includes(saved)) since = saved;
       }
     } catch (e) {}
-    try { if (localStorage.getItem(THEME_KEY) === 'amber') applyTheme('amber'); } catch (e) {}
     updateTabs();
 
     var cached = getCache(since);

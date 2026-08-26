@@ -233,14 +233,14 @@ test('real pipeline over HTTP: concurrent misses hit upstream exactly once', asy
   assert.strictEqual(upstreamHits, 1, 'HTTP layer must dedupe through the real pipeline');
 });
 
-// ISSUE-R04 · both phosphor themes must keep every text color WCAG AA on bg.
+// ISSUE-R04 · every text color in the palette must stay WCAG AA on bg.
 // Parses the CSS custom properties directly so a future palette tweak that
 // drops below 4.5:1 fails CI instead of shipping unreadable hint text.
 test('R04: all text colors in both themes meet WCAG AA (>= 4.5:1)', () => {
   const css = fs.readFileSync(path.join(__dirname, '../public/style.css'), 'utf8');
   const bgLum = relLuminance('#050b07');
   const props = [...css.matchAll(/--(ink|bright|dim|faint|amber|red):\s*(#[0-9a-fA-F]{6})/g)];
-  assert.ok(props.length >= 12, 'expected both themes color steps, found ' + props.length);
+  assert.ok(props.length >= 6, 'expected full palette color steps, found ' + props.length);
   for (const [, name, hex] of props) {
     const ratio = contrast(relLuminance(hex), bgLum);
     assert.ok(ratio >= 4.5, '--' + name + ' ' + hex + ' contrast ' + ratio.toFixed(2) + ' < 4.5');

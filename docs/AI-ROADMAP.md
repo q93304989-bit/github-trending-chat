@@ -38,7 +38,7 @@
 - 为什么是 P0：**终端主题的灵魂交互**——鼠标流之外补全键盘流，气质完全统一。
 - 验收：j/k 移动时高亮跟随滚动进视口（scrollIntoView block:'nearest'）；RM 不受影响。
 
-**R-02 · 琥珀单色主题切换 [THEME] ✅** ★★★★☆ / 成本低
+**R-02 · 琥珀单色主题切换 [THEME] ⛔ 已实施后按用户要求整体移除（2026-08）——色板与切换器代码不再存在；若重启需重写并重新过对比度哨兵** ★★★★☆ / 成本低
 - 位置：style.css（:root 变量已全部 token 化，天然支持）；cmdbar 加按钮
 - 改法：`body.theme-amber { --ink:#ffb454; --bright:#ffd07a; --dim:#c88a3a; --faint:#8a5c28; --line:#5c3d1a; --glow:琥珀辉光; ... }`；localStorage 存偏好；按钮循环 green→amber。**新主题全色阶需过 4.5:1 实测**（faint 教训）。
 - 验收：两主题下全文本色对比度脚本断言 ≥4.5。

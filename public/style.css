@@ -18,19 +18,6 @@
           "Sarasa Mono SC", "Noto Sans Mono CJK SC", "Microsoft YaHei", monospace;
 }
 
-/* R-02 · amber phosphor theme: same tube, warmer phosphor. Every text step
-   is measured >= 4.5:1 on --bg (see test/regression.test.js sentinel). */
-body.theme-amber {
-  --ink: #ffb454;
-  --bright: #ffd07a;
-  --dim: #c8863a;
-  --faint: #a1733a;      /* 4.75:1 */
-  --line: #5c3d1a;
-  --line-hi: #a1733a;
-  --amber: #ffd07a;
-  --red: #ff7a66;
-  --glow: 0 0 8px rgba(255, 180, 84, .25);
-}
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -442,4 +429,3 @@ body.is-syncing #sync-btn { animation: btn-breathe 1.4s ease-in-out infinite; }
   background: rgba(127, 255, 176, .05);
   box-shadow: inset 2px 0 0 var(--bright), var(--glow);
 }
-body.theme-amber .repo.cursor-line { background: rgba(255, 180, 84, .05); }
