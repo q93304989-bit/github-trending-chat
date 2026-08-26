@@ -30,24 +30,24 @@
 
 ## 二、提升项清单
 
-### P0 · 主题契合的杀手级（建议第一批，一次提交）
+### P0 · 主题契合的杀手级（✅ 已全部实施，见各项标注）
 
-**R-01 · vim 式键盘导航** ★★★★★ / 成本中
+**R-01 · vim 式键盘导航 ✅** ★★★★★ / 成本中
 - 位置：app.js（keydown 处理器扩展 + `cursor` 高亮类）
 - 改法：`j`/`k`（或 ↓/↑）在 .repo 间移动高亮（`.repo.cursor-line`：左边框亮 + 微辉光），`Enter` 打开当前项链接，`c` 复制当前项；Esc 取消。与 1/2/3/R 并存。
 - 为什么是 P0：**终端主题的灵魂交互**——鼠标流之外补全键盘流，气质完全统一。
 - 验收：j/k 移动时高亮跟随滚动进视口（scrollIntoView block:'nearest'）；RM 不受影响。
 
-**R-02 · 琥珀单色主题切换 [THEME]** ★★★★☆ / 成本低
+**R-02 · 琥珀单色主题切换 [THEME] ✅** ★★★★☆ / 成本低
 - 位置：style.css（:root 变量已全部 token 化，天然支持）；cmdbar 加按钮
 - 改法：`body.theme-amber { --ink:#ffb454; --bright:#ffd07a; --dim:#c88a3a; --faint:#8a5c28; --line:#5c3d1a; --glow:琥珀辉光; ... }`；localStorage 存偏好；按钮循环 green→amber。**新主题全色阶需过 4.5:1 实测**（faint 教训）。
 - 验收：两主题下全文本色对比度脚本断言 ≥4.5。
 
-**R-03 · URL 状态 `?since=daily`** ★★★★ / 成本低
+**R-03 · URL 状态 `?since=daily` ✅（附带修复 serveStatic 带 query 根路径 404）** ★★★★ / 成本低
 - 位置：app.js boot（读取 URLSearchParams 优先于 localStorage）+ selectPeriod（history.replaceState 同步）
 - 验收：带参打开直达榜单；切榜后 URL 变化；刷新保持。
 
-**R-04 · faint 对比度修复** ★★★★ / 成本极低
+**R-04 · faint 对比度修复 ✅（#2f9558, 5.25:1）** ★★★★ / 成本极低
 - 改法：`--faint: #2a8a52`（预估 ~4.6:1，落地后实测确认 ≥4.5）；hint-line 字号 12→12.5px 可选。
 - 验收：对比度脚本进 test（源码哨兵：解析 :root 十六进制断言）。
 
@@ -65,7 +65,7 @@
 - 改法：navigator.onLine + online/offline 事件 → 状态栏 `$ OFFLINE · 显示缓存`（status-offline 类已有）。
 - 验收：DevTools 离线模拟 → 状态栏即时切换。
 
-**R-08 · 快捷键帮助补全** ★★★ / 成本极低
+**R-08 · 快捷键帮助补全 ✅（修正：1/2/3/R 原有提示，本次补 J/K/ENTER/C）** ★★★ / 成本极低
 - 改法：hint 行追加 `[1/2/3] 切换榜单 · [R] 同步 · [J/K] 导航 · [Enter] 打开`；配合 R-04 提亮的 faint。
 - 验收：hint 行文案包含全部可用键位。
 

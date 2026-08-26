@@ -18,6 +18,7 @@
   var PERIODS = ['daily', 'weekly', 'monthly'];
   var CACHE_KEY = 'ght.cache.v2';
   var SINCE_KEY = 'ght.since';
+  var THEME_KEY = 'ght.theme';
   // ISSUE-06: must exceed the backend worst case (~10s x2 tries + 700ms
   // pause = ~20.7s), or the client aborts requests the server is about to win.
   var FETCH_TIMEOUT_MS = 22000;
@@ -302,10 +303,42 @@
       .finally(function () { setBusy(false); });
   }
 
+  /* ---------- R-02 · phosphor theme ---------- */
+  function applyTheme(t) {
+    var amber = t === 'amber';
+    document.body.classList.toggle('theme-amber', amber);
+    var btn = document.getElementById('theme-btn');
+    if (btn) btn.textContent = amber ? '[ AMBER ]' : '[ GREEN ]';
+    try { localStorage.setItem(THEME_KEY, t); } catch (e) {}
+  }
+
+  /* ---------- R-01 · vim-style cursor navigation ---------- */
+  var cursorIndex = -1;
+  function cardList() {
+    return Array.prototype.slice.call(document.querySelectorAll('.result-block .repo'));
+  }
+  function setCursor(i) {
+    var cards = cardList();
+    if (!cards.length) return;
+    cursorIndex = Math.max(0, Math.min(i, cards.length - 1));
+    cards.forEach(function (c, idx) { c.classList.toggle('cursor-line', idx === cursorIndex); });
+    cards[cursorIndex].scrollIntoView({ block: 'nearest', behavior: REDUCED_MOTION ? 'auto' : 'smooth' });
+  }
+  function clearCursor() {
+    cursorIndex = -1;
+    cardList().forEach(function (c) { c.classList.remove('cursor-line'); });
+  }
+  function currentCardLink() {
+    var card = cardList()[cursorIndex];
+    return card ? card.querySelector('.name') : null;
+  }
+
   function selectPeriod(p) {
     if (!PERIODS.includes(p) || p === since || busy) return;
     since = p;
+    clearCursor();
     try { localStorage.setItem(SINCE_KEY, since); } catch (e) {}
+    try { history.replaceState(null, '', '?since=' + since); } catch (e) {}
     updateTabs();
     var cached = getCache(since);
     if (cached) {
@@ -335,8 +368,8 @@
   }
 
   function addHint() {
-    addLine('数字键 <kbd>1</kbd>/<kbd>2</kbd>/<kbd>3</kbd> 切换日/周/月榜 \u00b7 <kbd>R</kbd> 同步 \u00b7 '
-      + '点仓库名直达 \u00b7 [COPY] 复制链接', 'hint-line');
+    addLine('<kbd>1</kbd>/<kbd>2</kbd>/<kbd>3</kbd> 榜单 \u00b7 <kbd>R</kbd> 同步 \u00b7 <kbd>J</kbd>/<kbd>K</kbd> 导航 \u00b7 '
+      + '<kbd>ENTER</kbd> 打开 \u00b7 <kbd>C</kbd> 复制 \u00b7 点仓库名直达', 'hint-line');
   }
 
   /* ---------- events ---------- */
@@ -344,6 +377,10 @@
   clearBtn.addEventListener('click', clearScreen);
   periodBtns.forEach(function (b) {
     b.addEventListener('click', function () { selectPeriod(b.dataset.since); });
+  });
+  var themeBtn = document.getElementById('theme-btn');
+  if (themeBtn) themeBtn.addEventListener('click', function () {
+    applyTheme(document.body.classList.contains('theme-amber') ? 'green' : 'amber');
   });
 
   messagesEl.addEventListener('click', function (e) {
@@ -423,10 +460,31 @@
     var tag = (e.target.tagName || '').toLowerCase();
     if (tag === 'input' || tag === 'textarea') return;
     var k = e.key.toLowerCase();
+    var isBtn = tag === 'button' || tag === 'a';
     if (k === 'r') runSync(false);
     else if (k === '1') selectPeriod('daily');
     else if (k === '2') selectPeriod('weekly');
     else if (k === '3') selectPeriod('monthly');
+    else if (k === 'j' || k === 'arrowdown') {
+      if (isBtn && k === 'arrowdown') return;   // focused tab: let native/tabs handle arrows
+      e.preventDefault();
+      setCursor(cursorIndex < 0 ? 0 : cursorIndex + 1);
+    } else if (k === 'k' || k === 'arrowup') {
+      if (isBtn && k === 'arrowup') return;
+      e.preventDefault();
+      setCursor(cursorIndex < 0 ? 0 : cursorIndex - 1);
+    } else if (k === 'enter') {
+      if (isBtn) return;                        // native button activation
+      var link = currentCardLink();
+      if (link) window.open(link.href, '_blank', 'noopener');
+    } else if (k === 'c' && !isBtn) {
+      var clink = currentCardLink();
+      var card = cardList()[cursorIndex];
+      var cbtn = card && card.querySelector('.mini[data-copy]');
+      if (cbtn) cbtn.click();   // reuse the delegated copy path + COPIED animation
+    } else if (k === 'escape') {
+      clearCursor();
+    }
   });
 
   /* ---------- boot sequence overlay (A0) ---------- */
@@ -499,9 +557,14 @@
     if (tbTitle) tbTitle.textContent = 'gh-trending@' + location.hostname
       + ':' + (location.port || '80') + ' — zsh';
     try {
-      var saved = localStorage.getItem(SINCE_KEY);
-      if (PERIODS.includes(saved)) since = saved;
+      var fromUrl = new URLSearchParams(location.search).get('since');
+      if (PERIODS.includes(fromUrl)) since = fromUrl;
+      else {
+        var saved = localStorage.getItem(SINCE_KEY);
+        if (PERIODS.includes(saved)) since = saved;
+      }
     } catch (e) {}
+    try { if (localStorage.getItem(THEME_KEY) === 'amber') applyTheme('amber'); } catch (e) {}
     updateTabs();
 
     var cached = getCache(since);

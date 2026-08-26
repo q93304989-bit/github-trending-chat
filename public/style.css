@@ -8,7 +8,7 @@
   --ink: #46e07f;        /* body text */
   --bright: #7dffb0;     /* headings / links */
   --dim: #35a05e;        /* secondary text */
-  --faint: #1f6b40;      /* hints */
+  --faint: #2f9558;      /* hints (WCAG AA: 5.25:1 on bg) */
   --line: #14402a;       /* borders */
   --line-hi: #2a7a4c;    /* hovered borders */
   --amber: #ffb454;      /* growth numbers */
@@ -16,6 +16,20 @@
   --glow: 0 0 8px rgba(80, 255, 140, .28);
   --font: "Cascadia Code", "JetBrains Mono", "Fira Code", Consolas,
           "Sarasa Mono SC", "Noto Sans Mono CJK SC", "Microsoft YaHei", monospace;
+}
+
+/* R-02 · amber phosphor theme: same tube, warmer phosphor. Every text step
+   is measured >= 4.5:1 on --bg (see test/regression.test.js sentinel). */
+body.theme-amber {
+  --ink: #ffb454;
+  --bright: #ffd07a;
+  --dim: #c8863a;
+  --faint: #a1733a;      /* 4.75:1 */
+  --line: #5c3d1a;
+  --line-hi: #a1733a;
+  --amber: #ffd07a;
+  --red: #ff7a66;
+  --glow: 0 0 8px rgba(255, 180, 84, .25);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -419,3 +433,9 @@ body.is-syncing #sync-btn { animation: btn-breathe 1.4s ease-in-out infinite; }
 .boot-seq .track { opacity: .3; }
 .boot-seq .pct { color: var(--amber); }
 @keyframes boot-line-in { from { opacity: 0; } }
+/* --- R-01 · vim-style cursor line (j/k navigation highlight) ------------ */
+.repo.cursor-line {
+  background: rgba(127, 255, 176, .05);
+  box-shadow: inset 2px 0 0 var(--bright), var(--glow);
+}
+body.theme-amber .repo.cursor-line { background: rgba(255, 180, 84, .05); }

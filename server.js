@@ -202,7 +202,10 @@ function serveStatic(req, res) {
     res.setHeader('Allow', 'GET, HEAD');
     return send(res, 405, { 'Content-Type': 'text/plain; charset=utf-8' }, 'Method Not Allowed');
   }
-  const urlPath = req.url === '/' ? '/index.html' : req.url.split('?')[0];
+  // Strip query first, THEN map root — `/?since=daily` must serve index too
+  // (the old ternary mapped only a bare `/`, so any query on / 404'd).
+  const pathname = (req.url || '/').split('?')[0];
+  const urlPath = pathname === '/' ? '/index.html' : pathname;
   const filePath = path.normalize(path.join(PUBLIC_DIR, urlPath));
   const root = PUBLIC_DIR.endsWith(path.sep) ? PUBLIC_DIR : PUBLIC_DIR + path.sep;
   if (filePath !== PUBLIC_DIR && !filePath.startsWith(root)) {
