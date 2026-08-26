@@ -303,9 +303,13 @@ body.is-syncing #sync-progress {
   opacity: 1;
   animation: progress-sweep 1.15s ease-in-out infinite;
 }
+/* Sweep via background-position, NOT transform: a transformed box's bounds
+   still count toward the document scrollable overflow, so the old
+   translateX(100%) version widened the document and made the horizontal
+   scrollbar flicker for the whole sync. Background paint never overflows. */
 @keyframes progress-sweep {
-  from { transform: translateX(-100%); }
-  to   { transform: translateX(100%); }
+  from { background-position: -40% 0; }
+  to   { background-position: 100% 0; }
 }
 
 /* --- B2 · skeleton ghost cards with a sweeping highlight ----------- */
