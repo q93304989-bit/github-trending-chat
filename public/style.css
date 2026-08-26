@@ -1,3 +1,11 @@
+/* BigBlue Terminal 437 - DOS/BBS bitmap-style font for the side art.
+   OFL license ships alongside in fonts/. Sizes use multiples of 8px
+   (the font's native cell) for crisp rendering. */
+@font-face {
+  font-family: 'BigBlue Term';
+  src: url('fonts/BigBlueTerm437NerdFontMono-Regular.ttf') format('truetype');
+  font-display: block;
+}
 /* ============================================================
    GH-TRENDING // TERMINAL — phosphor-green CRT theme
    ============================================================ */
@@ -446,38 +454,64 @@ body.is-syncing #sync-btn { animation: btn-breathe 1.4s ease-in-out infinite; }
 .side-art {
   position: fixed; top: 50%; transform: translateY(-50%);
   display: flex; align-items: baseline; gap: 10px; pointer-events: none;
-  font-weight: 700; user-select: none; white-space: nowrap;
+  font-family: 'BigBlue Term', var(--font);
+  font-weight: 400; user-select: none; white-space: nowrap;
 }
-.side-left  { left: 40px; }
-.side-right { right: 40px; }
+/* true 3d: the whole word leans toward the terminal */
+.side-left  { left: 40px; transform: translateY(-50%) perspective(900px) rotateY(20deg) rotateX(3deg); }
+.side-right { right: 40px; transform: translateY(-50%) perspective(900px) rotateY(-20deg) rotateX(3deg); }
+
+/* vanishing guide lines: from the word's corners toward the terminal,
+   fading out - the terminal itself clips whatever continues underneath */
+.side-art::before, .side-art::after {
+  content: ""; position: absolute; width: 260px; height: 2px;
+  background: linear-gradient(90deg, var(--ink), rgba(70, 224, 127, 0));
+  box-shadow: 0 0 10px rgba(80, 255, 140, .35);
+}
+.side-left::before  { top: -14px; right: -230px; transform: rotate(14deg); transform-origin: left center; }
+.side-left::after   { bottom: -10px; right: -230px; transform: rotate(-14deg); transform-origin: left center; }
+.side-right::before { top: -14px; left: -230px; transform: rotate(-14deg); transform-origin: right center; background: linear-gradient(270deg, var(--ink), rgba(70, 224, 127, 0)); }
+.side-right::after  { bottom: -10px; left: -230px; transform: rotate(14deg); transform-origin: right center; background: linear-gradient(270deg, var(--ink), rgba(70, 224, 127, 0)); }
 
 .sa {
   line-height: 1;
-  font-size: 76px;
+  font-size: 64px;
   color: var(--ink);
-  text-shadow: 0 0 18px rgba(80, 255, 140, .3);
   animation: sa-flicker 5.2s ease-in-out infinite;
-  transform-origin: center bottom;
+}
+/* extruded 3d body: stepped shadow layers toward the screen edge + down,
+   then a glow layer - classic DOS loader typography */
+.side-left .sa {
+  text-shadow: -1px 1px 0 #2a7a4c, -2px 2px 0 #266f45, -3px 3px 0 #22643e,
+    -4px 4px 0 #1e5937, -5px 5px 0 #1a4e30, -6px 6px 0 #164329,
+    -7px 7px 0 #123822, -8px 8px 0 #0f2d1b, -9px 9px 0 #0c2416,
+    -10px 10px 0 #0a1c11, -11px 11px 0 #081509, -12px 12px 0 #060f09,
+    0 0 18px rgba(80, 255, 140, .3);
+}
+.side-right .sa {
+  text-shadow: 1px 1px 0 #2a7a4c, 2px 2px 0 #266f45, 3px 3px 0 #22643e,
+    4px 4px 0 #1e5937, 5px 5px 0 #1a4e30, 6px 6px 0 #164329,
+    7px 7px 0 #123822, 8px 8px 0 #0f2d1b, 9px 9px 0 #0c2416,
+    10px 10px 0 #0a1c11, 11px 11px 0 #081509, 12px 12px 0 #060f09,
+    0 0 18px rgba(80, 255, 140, .3);
 }
 .sa:nth-child(2n) { animation-duration: 6.4s; animation-delay: -2.1s; }
 .sa:nth-child(3n) { animation-duration: 4.3s; animation-delay: -3.7s; }
-.sa.hi { text-shadow: 0 0 26px rgba(125, 255, 176, .5), 0 0 8px rgba(125, 255, 176, .65); }
 
-/* toward-center perspective: letters shrink and fade toward the terminal,
-   like a poster word receding into the screen */
-.side-left .sa:nth-child(1) { transform: scale(1.25); }
-.side-left .sa:nth-child(2) { transform: scale(1.08); opacity: .88; }
-.side-left .sa:nth-child(3) { transform: scale(0.92); opacity: .72; }
-.side-left .sa:nth-child(4) { transform: scale(0.78); opacity: .56; }
-.side-left .sa:nth-child(5) { transform: scale(0.66); opacity: .42; }
-.side-left .sa:nth-child(6) { transform: scale(0.55); opacity: .3; }
-.side-right .sa:nth-child(1) { transform: scale(0.55); opacity: .3; }
-.side-right .sa:nth-child(2) { transform: scale(0.66); opacity: .42; }
-.side-right .sa:nth-child(3) { transform: scale(0.78); opacity: .56; }
-.side-right .sa:nth-child(4) { transform: scale(0.92); opacity: .72; }
-.side-right .sa:nth-child(5) { transform: scale(1.08); opacity: .88; }
-.side-right .sa:nth-child(6) { transform: scale(1.25); }
-.side-right .sa:nth-child(7) { transform: scale(1.38); }
+/* toward-center perspective: shrink + fade toward the terminal (8px steps) */
+.side-left .sa:nth-child(1) { font-size: 88px; }
+.side-left .sa:nth-child(2) { font-size: 72px; opacity: .88; }
+.side-left .sa:nth-child(3) { font-size: 60px; opacity: .72; }
+.side-left .sa:nth-child(4) { font-size: 56px; opacity: .56; }
+.side-left .sa:nth-child(5) { font-size: 48px; opacity: .42; }
+.side-left .sa:nth-child(6) { font-size: 40px; opacity: .3; }
+.side-right .sa:nth-child(1) { font-size: 40px; opacity: .3; }
+.side-right .sa:nth-child(2) { font-size: 48px; opacity: .42; }
+.side-right .sa:nth-child(3) { font-size: 56px; opacity: .56; }
+.side-right .sa:nth-child(4) { font-size: 60px; opacity: .72; }
+.side-right .sa:nth-child(5) { font-size: 72px; opacity: .88; }
+.side-right .sa:nth-child(6) { font-size: 88px; }
+.side-right .sa:nth-child(7) { font-size: 96px; }
 
 @keyframes sa-flicker {
   0%, 44%, 56%, 100% { filter: brightness(1); }
