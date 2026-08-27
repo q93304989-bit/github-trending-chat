@@ -456,14 +456,14 @@ body.is-syncing #sync-btn { animation: btn-breathe 1.4s ease-in-out infinite; }
    the viewport center, so lines pivoting there always converge on it.
    Word-side end glows, center end fades into the vanishing point. */
 .side-grid::before, .side-grid::after {
-  content: ""; position: absolute; top: 50%; width: 32vw; height: 2px;
+  content: ""; position: absolute; top: 50%; width: 56vw; height: 2px;
   background: linear-gradient(var(--dir, to right), var(--ink), rgba(70, 224, 127, 0));
   box-shadow: 0 0 10px rgba(80, 255, 140, .35);
 }
-.side-grid-l::before { right: 0; transform-origin: right center; transform: rotate(-12deg); }
-.side-grid-l::after  { right: 0; transform-origin: right center; transform: rotate(12deg); }
-.side-grid-r::before { left: 0;  transform-origin: left center;  transform: rotate(12deg);  --dir: to left; }
-.side-grid-r::after  { left: 0;  transform-origin: left center;  transform: rotate(-12deg); --dir: to left; }
+.side-grid-l::before { right: 0; transform-origin: right center; transform: rotate(-24deg); }
+.side-grid-l::after  { right: 0; transform-origin: right center; transform: rotate(24deg); }
+.side-grid-r::before { left: 0;  transform-origin: left center;  transform: rotate(24deg);  --dir: to left; }
+.side-grid-r::after  { left: 0;  transform-origin: left center;  transform: rotate(-24deg); --dir: to left; }
 
 .side-art {
   position: fixed; top: 50%; transform: translateY(-50%);
@@ -472,8 +472,8 @@ body.is-syncing #sync-btn { animation: btn-breathe 1.4s ease-in-out infinite; }
   font-weight: 400; user-select: none; white-space: nowrap;
 }
 /* true 3d: the whole word leans toward the terminal */
-.side-left  { left: 40px; transform: translateY(-50%) perspective(900px) rotateY(20deg) rotateX(3deg); }
-.side-right { right: 40px; transform: translateY(-50%) perspective(900px) rotateY(-20deg) rotateX(3deg); }
+.side-left  { left: 40px; transform: translateY(-52%) perspective(900px) rotateY(20deg) rotateX(3deg); }
+.side-right { right: 40px; transform: translateY(-52%) perspective(900px) rotateY(-20deg) rotateX(3deg); }
 
 .sa {
   line-height: 1;
