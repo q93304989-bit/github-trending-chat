@@ -474,7 +474,7 @@ body.is-syncing #sync-btn { animation: btn-breathe 1.4s ease-in-out infinite; }
    ============================================================ */
 .side-stage {
   position: fixed; inset: 0; pointer-events: none;
-  perspective: 760px;              /* origin defaults to viewport center */
+  perspective: 520px;              /* origin defaults to viewport center */
 }
 .marquee {
   position: absolute; top: 50%; transform: translateY(-52%);
@@ -503,17 +503,17 @@ body.is-syncing #sync-btn { animation: btn-breathe 1.4s ease-in-out infinite; }
 /* z-depth rails as per-letter variables: static base + breathing wave
    (leaf-level transform animation projects fine - verified) */
 .m-left .sa:nth-child(1) { --z: 0px; }
-.m-left .sa:nth-child(2) { --z: -90px; }
-.m-left .sa:nth-child(3) { --z: -180px; }
-.m-left .sa:nth-child(4) { --z: -270px; }
-.m-left .sa:nth-child(5) { --z: -360px; }
-.m-left .sa:nth-child(6) { transform: none; --z: -450px; }
-.m-right .sa:nth-child(1) { --z: -540px; }
-.m-right .sa:nth-child(2) { --z: -450px; }
-.m-right .sa:nth-child(3) { --z: -360px; }
-.m-right .sa:nth-child(4) { --z: -270px; }
-.m-right .sa:nth-child(5) { --z: -180px; }
-.m-right .sa:nth-child(6) { --z: -90px; }
+.m-left .sa:nth-child(2) { --z: -170px; }
+.m-left .sa:nth-child(3) { --z: -340px; }
+.m-left .sa:nth-child(4) { --z: -510px; }
+.m-left .sa:nth-child(5) { --z: -680px; }
+.m-left .sa:nth-child(6) { transform: none; --z: -850px; }
+.m-right .sa:nth-child(1) { --z: -1020px; }
+.m-right .sa:nth-child(2) { --z: -850px; }
+.m-right .sa:nth-child(3) { --z: -680px; }
+.m-right .sa:nth-child(4) { --z: -510px; }
+.m-right .sa:nth-child(5) { --z: -340px; }
+.m-right .sa:nth-child(6) { --z: -170px; }
 .m-right .sa:nth-child(7) { transform: none; --z: 0px; }
 /* wave phase offsets: ripple travels from the outer edge inward */
 .m-left .sa:nth-child(2) { --fd: -0.2s; --wd: -0.9s; }
@@ -531,7 +531,7 @@ body.is-syncing #sync-btn { animation: btn-breathe 1.4s ease-in-out infinite; }
 
 @keyframes depth-wave {
   0%, 100% { transform: translateZ(calc(var(--z, 0px))); }
-  50%      { transform: translateZ(calc(var(--z, 0px) + 460px)); }
+  50%      { transform: translateZ(calc(var(--z, 0px) + 180px)); }
 }
 @keyframes fly-l {
   0%   { left: -46vw; opacity: 0; }
