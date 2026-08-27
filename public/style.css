@@ -490,7 +490,7 @@ body.is-syncing #sync-btn { animation: btn-breathe 1.4s ease-in-out infinite; }
   text-shadow: -1px 1px 0 #2a7a4c, -2px 2px 0 #266f45, -3px 3px 0 #22643e,
     -4px 4px 0 #1e5937, 0 0 18px rgba(80, 255, 140, .28);
   transform: translateZ(var(--z, 0px));
-  animation: sa-flicker 5.2s ease-in-out infinite, depth-wave 7s ease-in-out infinite;
+  animation: sa-flicker 5.2s ease-in-out infinite, depth-wave 8s ease-in-out infinite;
   animation-delay: var(--fd, 0s), var(--wd, 0s);
 }
 .m-right .sa {
@@ -531,7 +531,7 @@ body.is-syncing #sync-btn { animation: btn-breathe 1.4s ease-in-out infinite; }
 
 @keyframes depth-wave {
   0%, 100% { transform: translateZ(calc(var(--z, 0px))); }
-  50%      { transform: translateZ(calc(var(--z, 0px) + 300px)); }
+  50%      { transform: translateZ(calc(var(--z, 0px) + 460px)); }
 }
 @keyframes fly-l {
   0%   { left: -46vw; opacity: 0; }
