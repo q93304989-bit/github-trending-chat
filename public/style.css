@@ -470,9 +470,30 @@ body.is-syncing #sync-btn { animation: btn-breathe 1.4s ease-in-out infinite; }
   display: flex; align-items: baseline; gap: 10px; pointer-events: none;
   font-family: 'BigBlue Term', var(--font);
   font-weight: 400; user-select: none; white-space: nowrap;
+  perspective: 620px;             /* shared vanishing setup per side */
 }
-/* true 3d: the whole word leans toward the terminal */
+/* true 3d: the whole word leans toward the terminal inside the shared
+   perspective - uniform glyphs get true near-large/far-small projection */
 .side-left  { left: 40px; }
+.side-right { right: 40px; }
+
+.saw {
+  display: inline-flex; align-items: baseline; gap: 14px;
+  transform-style: preserve-3d;
+}
+/* z-dive: each word breathes toward you and back into depth, anti-phase
+   per side - while one advances the other recedes behind the leaderboard */
+.side-left .saw  { animation: saw-dive-l 7s ease-in-out infinite alternate; }
+.side-right .saw { animation: saw-dive-r 7s ease-in-out infinite alternate; animation-delay: -3.5s; }
+
+@keyframes saw-dive-l {
+  from { transform: rotateY(34deg) rotateX(4deg) translateZ(-260px); }
+  to   { transform: rotateY(34deg) rotateX(4deg) translateZ(240px); }
+}
+@keyframes saw-dive-r {
+  from { transform: rotateY(-34deg) rotateX(4deg) translateZ(-260px); }
+  to   { transform: rotateY(-34deg) rotateX(4deg) translateZ(240px); }
+}
 
 .sa {
   line-height: 1;
