@@ -489,7 +489,10 @@ body.is-syncing #sync-btn { animation: btn-breathe 1.4s ease-in-out infinite; }
 .sa { line-height: 1; font-size: 104px; color: var(--ink);
   text-shadow: -1px 1px 0 #2a7a4c, -2px 2px 0 #266f45, -3px 3px 0 #22643e,
     -4px 4px 0 #1e5937, 0 0 18px rgba(80, 255, 140, .28);
-  animation: sa-flicker 5.2s ease-in-out infinite; }
+  transform: translateZ(var(--z, 0px));
+  animation: sa-flicker 5.2s ease-in-out infinite, depth-wave 7s ease-in-out infinite;
+  animation-delay: var(--fd, 0s), var(--wd, 0s);
+}
 .m-right .sa {
   text-shadow: 1px 1px 0 #2a7a4c, 2px 2px 0 #266f45, 3px 3px 0 #22643e,
     4px 4px 0 #1e5937, 0 0 18px rgba(80, 255, 140, .28); }
@@ -497,21 +500,39 @@ body.is-syncing #sync-btn { animation: btn-breathe 1.4s ease-in-out infinite; }
 .sa:nth-child(3n) { animation-duration: 4.3s; animation-delay: -3.7s; }
 .sa.hi { color: var(--bright); }
 
-/* z-depth rails: inner letters sit deeper; pure translation => no distortion */
-.m-left .sa:nth-child(1) { transform: translateZ(0); }
-.m-left .sa:nth-child(2) { transform: translateZ(-90px); }
-.m-left .sa:nth-child(3) { transform: translateZ(-180px); }
-.m-left .sa:nth-child(4) { transform: translateZ(-270px); }
-.m-left .sa:nth-child(5) { transform: translateZ(-360px); }
-.m-left .sa:nth-child(6) { transform: translateZ(-450px); }
-.m-right .sa:nth-child(1) { transform: translateZ(-540px); }
-.m-right .sa:nth-child(2) { transform: translateZ(-450px); }
-.m-right .sa:nth-child(3) { transform: translateZ(-360px); }
-.m-right .sa:nth-child(4) { transform: translateZ(-270px); }
-.m-right .sa:nth-child(5) { transform: translateZ(-180px); }
-.m-right .sa:nth-child(6) { transform: translateZ(-90px); }
-.m-right .sa:nth-child(7) { transform: translateZ(0); }
+/* z-depth rails as per-letter variables: static base + breathing wave
+   (leaf-level transform animation projects fine - verified) */
+.m-left .sa:nth-child(1) { --z: 0px; }
+.m-left .sa:nth-child(2) { --z: -90px; }
+.m-left .sa:nth-child(3) { --z: -180px; }
+.m-left .sa:nth-child(4) { --z: -270px; }
+.m-left .sa:nth-child(5) { --z: -360px; }
+.m-left .sa:nth-child(6) { transform: none; --z: -450px; }
+.m-right .sa:nth-child(1) { --z: -540px; }
+.m-right .sa:nth-child(2) { --z: -450px; }
+.m-right .sa:nth-child(3) { --z: -360px; }
+.m-right .sa:nth-child(4) { --z: -270px; }
+.m-right .sa:nth-child(5) { --z: -180px; }
+.m-right .sa:nth-child(6) { --z: -90px; }
+.m-right .sa:nth-child(7) { transform: none; --z: 0px; }
+/* wave phase offsets: ripple travels from the outer edge inward */
+.m-left .sa:nth-child(2) { --fd: -0.2s; --wd: -0.9s; }
+.m-left .sa:nth-child(3) { --fd: -0.4s; --wd: -1.8s; }
+.m-left .sa:nth-child(4) { --fd: -0.6s; --wd: -2.7s; }
+.m-left .sa:nth-child(5) { --fd: -0.8s; --wd: -3.6s; }
+.m-left .sa:nth-child(6) { --fd: -1s;   --wd: -4.5s; }
+.m-right .sa:nth-child(7) { --fd: -0.2s; --wd: -0.9s; }
+.m-right .sa:nth-child(6) { --fd: -0.4s; --wd: -1.8s; }
+.m-right .sa:nth-child(5) { --fd: -0.6s; --wd: -2.7s; }
+.m-right .sa:nth-child(4) { --fd: -0.8s; --wd: -3.6s; }
+.m-right .sa:nth-child(3) { --fd: -1s;   --wd: -4.5s; }
+.m-right .sa:nth-child(2) { --fd: -1.2s; --wd: -5.4s; }
+.m-right .sa:nth-child(1) { --fd: -1.4s; --wd: -6.3s; }
 
+@keyframes depth-wave {
+  0%, 100% { transform: translateZ(calc(var(--z, 0px))); }
+  50%      { transform: translateZ(calc(var(--z, 0px) + 300px)); }
+}
 @keyframes fly-l {
   0%   { left: -46vw; opacity: 0; }
   7%   { opacity: 1; }
