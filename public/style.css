@@ -465,83 +465,71 @@ body.is-syncing #sync-btn { animation: btn-breathe 1.4s ease-in-out infinite; }
 .side-grid-r::before { left: 0;  transform-origin: left center;  transform: rotate(24deg);  --dir: to left; }
 .side-grid-r::after  { left: 0;  transform-origin: left center;  transform: rotate(-24deg); --dir: to left; }
 
-.side-art {
-  position: fixed; top: 50%; transform: translateY(-50%);
-  display: flex; align-items: baseline; gap: 10px; pointer-events: none;
-  font-family: 'BigBlue Term', var(--font);
-  font-weight: 400; user-select: none; white-space: nowrap;
-  perspective: 620px;             /* shared vanishing setup per side */
-}
-/* true 3d: the whole word leans toward the terminal inside the shared
-   perspective - uniform glyphs get true near-large/far-small projection */
-.side-left  { left: 40px; }
-.side-right { right: 40px; }
 
-.saw {
-  display: inline-flex; align-items: baseline; gap: 14px;
+/* ============================================================
+   SIDE STAGE · crossing words on z-depth rails (>=1360px)
+   Movement rides LEFT/RIGHT only - running transform animations
+   flatten preserve-3d subtrees in Blink, so the depth ladder lives
+   entirely in static transforms beneath a fixed viewport-stage.
+   ============================================================ */
+.side-stage {
+  position: fixed; inset: 0; pointer-events: none;
+  perspective: 760px;              /* origin defaults to viewport center */
+}
+.marquee {
+  position: absolute; top: 50%; transform: translateY(-52%);
+  white-space: nowrap; user-select: none;
+  font-family: 'BigBlue Term', var(--font); font-weight: 400;
   transform-style: preserve-3d;
 }
-/* z-dive: each word breathes toward you and back into depth, anti-phase
-   per side - while one advances the other recedes behind the leaderboard */
-.side-left .saw  { animation: sink-l 8s linear infinite; }
-.side-right .saw { animation: sink-r 8s linear infinite; animation-delay: -4s; }
+.m-left  { left: 0;    animation: fly-l 16s linear infinite; }
+.m-right { right: 0;   animation: fly-r 16s linear infinite; }
 
-/* sink into the vanishing point: dwell at the flank, then glide along the
-   guide lines toward the viewport center, shrinking to nothing and fading
-   right at the centerline before being reborn at the outer edge */
-@keyframes sink-l {
-  0%   { transform: rotateY(34deg) rotateX(4deg) translate(0, 0) scale(1); opacity: 0; }
-  9%   { opacity: 1; }
-  24%  { transform: rotateY(34deg) rotateX(4deg) translate(0, 0) scale(1); opacity: 1; }
-  88%  { transform: rotateY(34deg) rotateX(4deg) translate(calc(50vw - 96%), -2vh) scale(.14); opacity: .85; }
-  96%  { opacity: 0; transform: rotateY(34deg) rotateX(4deg) translate(calc(51vw - 96%), -3vh) scale(.08); }
-  100% { opacity: 0; transform: rotateY(34deg) rotateX(4deg) translate(0, 0) scale(1); }
-}
-@keyframes sink-r {
-  0%   { transform: rotateY(-34deg) rotateX(4deg) translate(0, 0) scale(1); opacity: 0; }
-  9%   { opacity: 1; }
-  24%  { transform: rotateY(-34deg) rotateX(4deg) translate(0, 0) scale(1); opacity: 1; }
-  88%  { transform: rotateY(-34deg) rotateX(4deg) translate(calc(96% - 50vw), -2vh) scale(.14); opacity: .85; }
-  96%  { opacity: 0; transform: rotateY(-34deg) rotateX(4deg) translate(calc(96% - 51vw), -3vh) scale(.08); }
-  100% { opacity: 0; transform: rotateY(-34deg) rotateX(4deg) translate(0, 0) scale(1); }
-}
-}
-
-.sa {
-  line-height: 1;
-  font-size: 64px;
-  color: var(--ink);
-  animation: sa-flicker 5.2s ease-in-out infinite;
-}
-/* extruded 3d body: stepped shadow layers toward the screen edge + down,
-   then a glow layer - classic DOS loader typography */
-.side-left .sa {
+.saw { display: inline-flex; align-items: baseline; gap: 26px; transform-style: preserve-3d; }
+.sa { line-height: 1; font-size: 104px; color: var(--ink);
   text-shadow: -1px 1px 0 #2a7a4c, -2px 2px 0 #266f45, -3px 3px 0 #22643e,
-    -4px 4px 0 #1e5937, -5px 5px 0 #1a4e30, -6px 6px 0 #164329,
-    -7px 7px 0 #123822, -8px 8px 0 #0f2d1b, -9px 9px 0 #0c2416,
-    -10px 10px 0 #0a1c11, -11px 11px 0 #081509, -12px 12px 0 #060f09,
-    0 0 18px rgba(80, 255, 140, .3);
-}
-.side-right .sa {
+    -4px 4px 0 #1e5937, 0 0 18px rgba(80, 255, 140, .28);
+  animation: sa-flicker 5.2s ease-in-out infinite; }
+.m-right .sa {
   text-shadow: 1px 1px 0 #2a7a4c, 2px 2px 0 #266f45, 3px 3px 0 #22643e,
-    4px 4px 0 #1e5937, 5px 5px 0 #1a4e30, 6px 6px 0 #164329,
-    7px 7px 0 #123822, 8px 8px 0 #0f2d1b, 9px 9px 0 #0c2416,
-    10px 10px 0 #0a1c11, 11px 11px 0 #081509, 12px 12px 0 #060f09,
-    0 0 18px rgba(80, 255, 140, .3);
-}
+    4px 4px 0 #1e5937, 0 0 18px rgba(80, 255, 140, .28); }
 .sa:nth-child(2n) { animation-duration: 6.4s; animation-delay: -2.1s; }
 .sa:nth-child(3n) { animation-duration: 4.3s; animation-delay: -3.7s; }
+.sa.hi { color: var(--bright); }
 
-/* toward-center perspective: shrink + fade toward the terminal (8px steps) */
-.sa { font-size: 96px; }   /* uniform size: perspective does the scaling */
+/* z-depth rails: inner letters sit deeper; pure translation => no distortion */
+.m-left .sa:nth-child(1) { transform: translateZ(0); }
+.m-left .sa:nth-child(2) { transform: translateZ(-90px); }
+.m-left .sa:nth-child(3) { transform: translateZ(-180px); }
+.m-left .sa:nth-child(4) { transform: translateZ(-270px); }
+.m-left .sa:nth-child(5) { transform: translateZ(-360px); }
+.m-left .sa:nth-child(6) { transform: translateZ(-450px); }
+.m-right .sa:nth-child(1) { transform: translateZ(-540px); }
+.m-right .sa:nth-child(2) { transform: translateZ(-450px); }
+.m-right .sa:nth-child(3) { transform: translateZ(-360px); }
+.m-right .sa:nth-child(4) { transform: translateZ(-270px); }
+.m-right .sa:nth-child(5) { transform: translateZ(-180px); }
+.m-right .sa:nth-child(6) { transform: translateZ(-90px); }
+.m-right .sa:nth-child(7) { transform: translateZ(0); }
+
+@keyframes fly-l {
+  0%   { left: -46vw; opacity: 0; }
+  7%   { opacity: 1; }
+  93%  { opacity: 1; }
+  100% { left: 112vw; opacity: 0; }
+}
+@keyframes fly-r {
+  0%   { right: -54vw; opacity: 0; }
+  7%   { opacity: 1; }
+  93%  { opacity: 1; }
+  100% { right: 120vw; opacity: 0; }
+}
 @keyframes sa-flicker {
   0%, 44%, 56%, 100% { filter: brightness(1); }
-  50% { filter: brightness(.6); }
-  78% { filter: brightness(.85); }
+  50% { filter: brightness(.72); }
+  78% { filter: brightness(.9); }
 }
-/* breakpoint only guards true small screens now: the terminal always sits
-   above the banners and clips their near-center letters naturally, so any
-   window that can spare a sliver of flank shows the art */
+
 @media (max-width: 1359.98px) {
-  .side-art, .side-grid { display: none; }
+  .marquee, .side-grid { display: none; }
 }
