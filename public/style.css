@@ -472,8 +472,7 @@ body.is-syncing #sync-btn { animation: btn-breathe 1.4s ease-in-out infinite; }
   font-weight: 400; user-select: none; white-space: nowrap;
 }
 /* true 3d: the whole word leans toward the terminal */
-.side-left  { left: 40px; transform: translateY(-52%) perspective(900px) rotateY(20deg) rotateX(3deg); }
-.side-right { right: 40px; transform: translateY(-52%) perspective(900px) rotateY(-20deg) rotateX(3deg); }
+.side-left  { left: 40px; }
 
 .sa {
   line-height: 1;
@@ -501,20 +500,7 @@ body.is-syncing #sync-btn { animation: btn-breathe 1.4s ease-in-out infinite; }
 .sa:nth-child(3n) { animation-duration: 4.3s; animation-delay: -3.7s; }
 
 /* toward-center perspective: shrink + fade toward the terminal (8px steps) */
-.side-left .sa:nth-child(1) { font-size: 136px; }
-.side-left .sa:nth-child(2) { font-size: 104px; opacity: .88; }
-.side-left .sa:nth-child(3) { font-size: 80px; opacity: .72; }
-.side-left .sa:nth-child(4) { font-size: 64px; opacity: .56; }
-.side-left .sa:nth-child(5) { font-size: 56px; opacity: .42; }
-.side-left .sa:nth-child(6) { font-size: 48px; opacity: .3; }
-.side-right .sa:nth-child(1) { font-size: 48px; opacity: .3; }
-.side-right .sa:nth-child(2) { font-size: 56px; opacity: .42; }
-.side-right .sa:nth-child(3) { font-size: 64px; opacity: .56; }
-.side-right .sa:nth-child(4) { font-size: 80px; opacity: .72; }
-.side-right .sa:nth-child(5) { font-size: 104px; opacity: .88; }
-.side-right .sa:nth-child(6) { font-size: 136px; }
-.side-right .sa:nth-child(7) { font-size: 152px; }
-
+.sa { font-size: 96px; }   /* uniform size: perspective does the scaling */
 @keyframes sa-flicker {
   0%, 44%, 56%, 100% { filter: brightness(1); }
   50% { filter: brightness(.6); }
