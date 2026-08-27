@@ -520,6 +520,9 @@ body.is-syncing #sync-btn { animation: btn-breathe 1.4s ease-in-out infinite; }
   50% { filter: brightness(.6); }
   78% { filter: brightness(.85); }
 }
-@media (max-width: 1699.98px) {
+/* breakpoint only guards true small screens now: the terminal always sits
+   above the banners and clips their near-center letters naturally, so any
+   window that can spare a sliver of flank shows the art */
+@media (max-width: 1359.98px) {
   .side-art, .side-grid { display: none; }
 }
