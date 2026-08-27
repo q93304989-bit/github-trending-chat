@@ -483,16 +483,28 @@ body.is-syncing #sync-btn { animation: btn-breathe 1.4s ease-in-out infinite; }
 }
 /* z-dive: each word breathes toward you and back into depth, anti-phase
    per side - while one advances the other recedes behind the leaderboard */
-.side-left .saw  { animation: saw-dive-l 7s ease-in-out infinite alternate; }
-.side-right .saw { animation: saw-dive-r 7s ease-in-out infinite alternate; animation-delay: -3.5s; }
+.side-left .saw  { animation: sink-l 8s linear infinite; }
+.side-right .saw { animation: sink-r 8s linear infinite; animation-delay: -4s; }
 
-@keyframes saw-dive-l {
-  from { transform: rotateY(34deg) rotateX(4deg) translateZ(-260px); }
-  to   { transform: rotateY(34deg) rotateX(4deg) translateZ(240px); }
+/* sink into the vanishing point: dwell at the flank, then glide along the
+   guide lines toward the viewport center, shrinking to nothing and fading
+   right at the centerline before being reborn at the outer edge */
+@keyframes sink-l {
+  0%   { transform: rotateY(34deg) rotateX(4deg) translate(0, 0) scale(1); opacity: 0; }
+  9%   { opacity: 1; }
+  24%  { transform: rotateY(34deg) rotateX(4deg) translate(0, 0) scale(1); opacity: 1; }
+  88%  { transform: rotateY(34deg) rotateX(4deg) translate(calc(50vw - 96%), -2vh) scale(.14); opacity: .85; }
+  96%  { opacity: 0; transform: rotateY(34deg) rotateX(4deg) translate(calc(51vw - 96%), -3vh) scale(.08); }
+  100% { opacity: 0; transform: rotateY(34deg) rotateX(4deg) translate(0, 0) scale(1); }
 }
-@keyframes saw-dive-r {
-  from { transform: rotateY(-34deg) rotateX(4deg) translateZ(-260px); }
-  to   { transform: rotateY(-34deg) rotateX(4deg) translateZ(240px); }
+@keyframes sink-r {
+  0%   { transform: rotateY(-34deg) rotateX(4deg) translate(0, 0) scale(1); opacity: 0; }
+  9%   { opacity: 1; }
+  24%  { transform: rotateY(-34deg) rotateX(4deg) translate(0, 0) scale(1); opacity: 1; }
+  88%  { transform: rotateY(-34deg) rotateX(4deg) translate(calc(96% - 50vw), -2vh) scale(.14); opacity: .85; }
+  96%  { opacity: 0; transform: rotateY(-34deg) rotateX(4deg) translate(calc(96% - 51vw), -3vh) scale(.08); }
+  100% { opacity: 0; transform: rotateY(-34deg) rotateX(4deg) translate(0, 0) scale(1); }
+}
 }
 
 .sa {
