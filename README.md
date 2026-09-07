@@ -75,9 +75,25 @@ public/
   render.js        # 仓库卡片渲染（UMD，可单测）
   demo.js          # 宣传截图专用演示模式（#/demo/cards|loading[/tall]），日常使用不激活
 test/              # 单元与集成测试（31 个，含 FIXLIST 回归）
+scripts/daily-digest.js  # 每日日榜 → markdown 归档（可 --push 自动提交）
+历史github日榜汇总/       # 归档目录：<年>年/<月>月/<YYYY-MM-DD>.md
 一键启动.vbs       # Windows 一键启动（端口就绪轮询 + 失败弹窗）
 docs/screenshot.png # 界面预览图
 ```
+
+## 每日榜单归档
+
+`scripts/daily-digest.js` 把 GitHub 日榜抓取成 markdown 并归档：
+
+```bash
+node scripts/daily-digest.js            # 只生成 markdown
+node scripts/daily-digest.js --push     # 生成 + git commit + push
+```
+
+归档路径 `历史github日榜汇总/<年>年/<月>月/<YYYY-MM-DD>.md`，例如
+`历史github日榜汇总/2026年/9月/2026-09-07.md`。每份含榜单表格（排名 / 仓库 / 简介 / 语言 / 总星标 /
+今日新增 / Fork）与语言分布统计，时区固定 GMT+8。脚本零依赖，抓取失败自动重试 3 次、推送失败重试 1 次；
+当天内容与已归档文件一致时跳过提交。已配置每日 09:00（GMT+8）自动执行。
 
 ## 测试
 
