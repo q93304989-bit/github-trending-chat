@@ -23,9 +23,13 @@
   var FETCH_TIMEOUT_MS = 22000;
   var SPIN_FRAMES = ['\u280B', '\u2819', '\u2839', '\u2838', '\u283C', '\u2834', '\u2826', '\u2827', '\u2807', '\u280F'];
   var REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var BOOT_SEEN_KEY = 'ght.boot.seen';        // 非首访缩短开机序列（S2）
+  var BOOT_FAST_AFTER_MS = 3 * 86400000;      // 3 天内算"回归用户"
 
   var since = 'weekly';
-  var busy = false;
+  var busy = false;         // 用户主动/首屏同步进行中
+  var bgBusy = false;       // 后台静默刷新进行中（不禁用按钮，可继续切榜）
+  var lastStatusAt = 0;     // 状态栏 flash 节流（I4）
   var resultEl = null;      // the single replaceable result block
   var spinTimer = null;
 
@@ -87,7 +91,9 @@
   function alignToBoard(block) {
     var m = messagesEl.getBoundingClientRect();
     var b = block.getBoundingClientRect();
-    messagesEl.scrollTop += b.top - m.top - 2;
+    var target = messagesEl.scrollTop + (b.top - m.top - 2);
+    // S5 · 切榜平滑滚动（同榜刷新不触发本函数）
+    messagesEl.scrollTo({ top: target, behavior: REDUCED_MOTION ? 'auto' : 'smooth' });
   }
 
   function typeText(node, text, cps, done) {
@@ -134,7 +140,9 @@
     var changed = statusLeft.textContent !== next;
     statusLeft.textContent = next;
     statusLeft.className = cls || '';
-    if (changed && !REDUCED_MOTION) {        // D7 · flash once on change
+    // I4 · 同文本不闪 + 300ms 节流：连续变化也只闪一次
+    if (changed && !REDUCED_MOTION && Date.now() - lastStatusAt >= 300) {
+      lastStatusAt = Date.now();
       statusLeft.classList.remove('flash');
       void statusLeft.offsetWidth;           // restart the animation
       statusLeft.classList.add('flash');
@@ -172,6 +180,18 @@
       .finally(function () { clearTimeout(timer); });
   }
 
+  /* ---------- S6 · 空闲时预取相邻榜单，切榜秒出 ---------- */
+  function prefetchOthers(currentPeriod) {
+    var others = PERIODS.filter(function (p) { return p !== currentPeriod; });
+    var idle = window.requestIdleCallback || function (fn) { setTimeout(fn, 250); };
+    idle(function () {
+      others.forEach(function (p) {
+        if (getCache(p)) return;
+        fetchTrending(p).then(function (data) { saveCache(p, data.items); }).catch(function () {});
+      });
+    });
+  }
+
   /* ---------- rendering ---------- */
   function ensureResultBlock() {
     if (!resultEl || !resultEl.isConnected) {
@@ -188,50 +208,84 @@
     return '<span class="src-live">LIVE</span>';
   }
 
-  var SWAP_MS = 130;
+  // 动效双档位（S3）：用户触发快档 / 后台刷新从容档
+  var SWAP_MS = { user: 70, bg: 130 };
   var swapSeq = 0;
+  var lastPaint = null;      // { since, fp } 同榜指纹（S4）
+
+  function fingerprintOf(items) {
+    return (items || []).map(function (i) { return i.url; }).join(',');
+  }
+  function headHtmlFor(items, data, label) {
+    return '&gt; TOP ' + items.length + ' \u00b7 ' + since.toUpperCase()
+      + ' BOARD \u00b7 ' + label
+      + ' \u00b7 SYNCED ' + clock(data.updatedAt) + humanAge(data.updatedAt);
+  }
 
   // A3 · staggered waterfall entrance for repo cards (--i drives delay)
-  function animateCards(block) {
+  // I1 · animationend 一次性移除 card-in，释放合成层、保证 hover 生效
+  function animateCards(block, pace) {
     if (REDUCED_MOTION) return;
     var cards = block.querySelectorAll('.repo');
     for (var i = 0; i < cards.length; i++) {
-      cards[i].style.setProperty('--i', String(Math.min(i, 10)));
-      cards[i].classList.add('card-in');
+      var card = cards[i];
+      card.style.setProperty('--i', String(Math.min(i, 10)));
+      card.classList.add('card-in');
+      (function (el) {
+        el.addEventListener('animationend', function h(e) {
+          if (e.animationName !== 'card-in') return;
+          el.classList.remove('card-in');
+          el.removeEventListener('animationend', h);
+        });
+      })(card);
     }
   }
 
-  function paintResult(block, html, meta) {
+  function paintResult(block, html, meta, opts) {
+    opts = opts || {};
     block.classList.remove('swap-out');
     block.innerHTML = html;
-    animateCards(block);
+    if (!REDUCED_MOTION && opts.animate !== false) {
+      animateCards(block, opts.pace);   // 同榜刷新 animate:false -> 只做旧榜淡出
+    }
     alignToBoard(block);   // start reading at rank #01, not at the bottom
     setRight(since.toUpperCase() + ' \u00b7 ' + meta.count + ' REPOS \u00b7 SYNCED ' + clock(meta.updatedAt));
   }
 
   function renderResult(data, opts) {
     opts = opts || {};
+    var pace = opts.pace || 'bg';
     var block = ensureResultBlock();
     var items = data.items || [];
     var label = opts.label || sourceLabel(data);
-    var html =
-      '<div class="sync-head">&gt; TOP ' + items.length + ' \u00b7 ' + since.toUpperCase()
-      + ' BOARD \u00b7 ' + label
-      + ' \u00b7 SYNCED ' + clock(data.updatedAt) + humanAge(data.updatedAt) + '</div>'
-      + R.cardsHtml(items, since);
+    var fp = fingerprintOf(items);
     var meta = { count: items.length, updatedAt: data.updatedAt };
 
-    // D6 · fade the previous board out first, then cascade the new one in
+    // S4 · 同榜同数据：不重播瀑布，只刷新 board 头部时间
+    if (!opts.instant && lastPaint && lastPaint.since === since &&
+        lastPaint.fp === fp && block.innerHTML.trim()) {
+      var head = block.querySelector('.sync-head');
+      if (head) head.innerHTML = headHtmlFor(items, data, label);
+      setRight(since.toUpperCase() + ' \u00b7 ' + meta.count + ' REPOS \u00b7 SYNCED ' + clock(meta.updatedAt));
+      return;
+    }
+
+    var sameSince = !!(lastPaint && lastPaint.since === since);
+    lastPaint = { since: since, fp: fp };
+    var html = '<div class="sync-head">' + headHtmlFor(items, data, label) + '</div>'
+      + R.cardsHtml(items, since);
+
+    // D6 · 旧榜先淡出；换榜 -> 新榜瀑布，同榜数据变化 -> 仅交叉淡入（S3/S4）
     if (!REDUCED_MOTION && block.innerHTML.trim() && !opts.instant) {
       var seq = ++swapSeq;
       block.classList.add('swap-out');
       setTimeout(function () {
         if (seq !== swapSeq || !block.isConnected) return;   // superseded/cleared
-        paintResult(block, html, meta);
-      }, SWAP_MS);
+        paintResult(block, html, meta, { pace: pace, animate: !sameSince });
+      }, SWAP_MS[pace]);
     } else {
       swapSeq++;
-      paintResult(block, html, meta);
+      paintResult(block, html, meta, { pace: pace, animate: !sameSince });
     }
   }
 
@@ -248,8 +302,10 @@
 
   /* ---------- sync flow ---------- */
   function runSync(background) {
-    if (busy) return;
-    setBusy(true);
+    // I3 · 后台静默刷新不占用 busy（按钮仍可点），只防重复；用户同步才全局禁用
+    if (busy || bgBusy) return;
+    if (background) bgBusy = true;
+    else { busy = true; setBusy(true); }
 
     var loadingLine = null;
     var spinEl = null;
@@ -265,6 +321,7 @@
       startSpin(spinEl);
       skeletonEl = addSkeleton();          // B2 · ghost cards while waiting
     }
+    var pace = background ? 'bg' : 'user';   // S3 · 双档位
     setStatus((background ? 'BG-SYNCING ' : 'SYNCING ') + since.toUpperCase() + ' ...');
 
   function removeLoading(line, skeleton) {
@@ -282,8 +339,9 @@
       .then(function (data) {
         removeLoading(loadingLine, skeletonEl);   // shift layout first, then align
         saveCache(since, data.items);
-        renderResult(data);
+        renderResult(data, { pace: pace });
         setStatus(data.stale ? 'STALE SERVED \u00b7 BACKGROUND REFRESH' : 'READY');
+        if (!data.stale) prefetchOthers(since);   // S6 · 只有拿到新鲜数据才预取
       })
       .catch(function (err) {
         removeLoading(loadingLine, skeletonEl);
@@ -291,7 +349,7 @@
         if (hadVisibleResult || cached) {
           // Keep whatever is on screen; surface the failure quietly in the statusbar.
           if (cached && !hadVisibleResult) {
-            renderResult({ items: cached.items, updatedAt: cached.at, fromCache: true });
+            renderResult({ items: cached.items, updatedAt: cached.at, fromCache: true }, { pace: pace });
           }
           setStatus('REFRESH FAILED \u00b7 SHOWING CACHED DATA', 'status-offline');
         } else {
@@ -299,7 +357,10 @@
           showError(msg);
         }
       })
-      .finally(function () { setBusy(false); });
+      .finally(function () {
+        if (background) bgBusy = false;
+        else { busy = false; setBusy(false); }
+      });
   }
 
   /* ---------- R-01 · vim-style cursor navigation ---------- */
@@ -332,7 +393,7 @@
     updateTabs();
     var cached = getCache(since);
     if (cached) {
-      renderResult({ items: cached.items, updatedAt: cached.at, fromCache: true });
+      renderResult({ items: cached.items, updatedAt: cached.at, fromCache: true }, { pace: 'user' });
       runSync(true);
     } else {
       runSync(false);
@@ -420,27 +481,6 @@
     selectPeriod(periodBtns[next].dataset.since);   // automatic activation
   });
 
-  // ISSUE-13: WAI-ARIA tabs — Left/Right/Home/End move focus and activate.
-  document.querySelector('.periods').addEventListener('keydown', function (e) {
-    var dir = e.key === 'ArrowLeft' ? -1 : e.key === 'ArrowRight' ? 1 : 0;
-    if (!dir && e.key !== 'Home' && e.key !== 'End') return;
-    e.preventDefault();
-    var idx = -1, i, j;
-    for (i = 0; i < periodBtns.length; i++) {
-      if (periodBtns[i] === document.activeElement) { idx = i; break; }
-    }
-    if (idx < 0) {
-      for (j = 0; j < periodBtns.length; j++) {
-        if (periodBtns[j].dataset.since === since) { idx = j; break; }
-      }
-    }
-    var next = e.key === 'Home' ? 0
-      : e.key === 'End' ? periodBtns.length - 1
-      : (idx + dir + periodBtns.length) % periodBtns.length;
-    periodBtns[next].focus();
-    selectPeriod(periodBtns[next].dataset.since);   // automatic activation
-  });
-
   document.addEventListener('keydown', function (e) {
     if (e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
     var tag = (e.target.tagName || '').toLowerCase();
@@ -479,6 +519,12 @@
   // under reduced-motion (resolves immediately, overlay never created).
   function playBootSequence() {
     if (REDUCED_MOTION) return Promise.resolve();
+    // S2 · 3 天内回归用户 -> 快速版（约 0.6s），首访保持完整仪式
+    var fast = false;
+    try {
+      var seen = Number(localStorage.getItem(BOOT_SEEN_KEY) || 0);
+      fast = !!seen && (Date.now() - seen) < BOOT_FAST_AFTER_MS;
+    } catch (e) {}
     return new Promise(function (resolve) {
       var seq = document.createElement('div');
       seq.className = 'boot-seq';
@@ -497,6 +543,10 @@
         '',
         'LOADING BOARD',
       ];
+      var LINE_MS = fast ? 35 : 85;
+      var TICK_MS = fast ? 14 : 22;
+      var STEP = fast ? 8 : 3;
+      var FINISH_MS = fast ? 80 : 190;
       var li = 0;
       function nextLine() {
         if (li >= LINES.length) { startBar(); return; }
@@ -504,7 +554,7 @@
         row.className = 'bl';
         row.innerHTML = LINES[li++];
         pre.appendChild(row);
-        setTimeout(nextLine, 85);
+        setTimeout(nextLine, LINE_MS);
       }
       function startBar() {
         var gauge = document.createElement('div');
@@ -512,16 +562,16 @@
         pre.appendChild(gauge);
         var W = 20, p = 0;
         var tick = setInterval(function () {
-          p += 3;
+          p += STEP;
           var filled = Math.min(Math.round(W * p / 100), W);
           gauge.innerHTML = '<span class=\"bar\">' + repeatChar('\u2588', filled) + '</span>'
             + '<span class=\"track\">' + repeatChar('\u2591', W - filled) + '</span> '
             + '<span class=\"pct\">' + Math.min(p, 100) + '%</span>';
           if (p >= 100) {
             clearInterval(tick);
-            setTimeout(finish, 150);   // let 100% register before the reveal
+            setTimeout(finish, FINISH_MS);   // let 100% register before the reveal
           }
-        }, 22);
+        }, TICK_MS);
       }
       function repeatChar(ch, n) {
         var out = '';
@@ -529,8 +579,9 @@
         return out;
       }
       function finish() {
+        try { localStorage.setItem(BOOT_SEEN_KEY, String(Date.now())); } catch (e) {}
         seq.classList.add('done');
-        setTimeout(function () { seq.remove(); resolve(); }, 190);
+        setTimeout(function () { seq.remove(); resolve(); }, FINISH_MS);
       }
       nextLine();
     });
@@ -554,27 +605,25 @@
 
     var cached = getCache(since);
 
-    // The boot overlay covers the first moments; the visible chrome (typewriter
-    // line, hints, first board paint) waits for it, then focuses in via
-    // body.booted-gated animations. Under reduced-motion this is immediate.
-    playBootSequence().then(function () {
+    // S1 · 开机覆盖层与数据请求并行：静态行先铺（被覆盖层遮住），同步立即启动；
+    // 覆盖层结束时若数据已到，画面零等待。
+    var bootPromise = playBootSequence();
+    addLine('gh-trending --since=' + since, 'cmd-echo');
+    var bootLine = addLine('<span class="btxt"></span><span class="cursor">\u258A</span>', '');
+    addHint();
+    if (cached) {
+      // Instant paint from local storage, then a quiet background refresh.
+      renderResult({ items: cached.items, updatedAt: cached.at, fromCache: true }, { pace: 'user' });
+      runSync(true);
+    } else {
+      runSync(false);
+    }
+    bootPromise.then(function () {
       document.body.classList.add('booted');
-      addLine('gh-trending --since=' + since, 'cmd-echo');
-      var bootLine = addLine('<span class="btxt"></span><span class="cursor">\u258A</span>', '');
-      // Static chrome goes in synchronously and above any later result block,
-      // so its late insertion can never yank the viewport past the leaderboard.
-      addHint();
       typeText(bootLine.querySelector('.btxt'), 'terminal online \u00b7 phosphor display ready', 90, function () {
         bootLine.classList.add('boot-ok');
         bootLine.innerHTML = 'terminal online \u00b7 phosphor display ready';
       });
-      if (cached) {
-        // Instant paint from local storage, then a quiet background refresh.
-        renderResult({ items: cached.items, updatedAt: cached.at, fromCache: true });
-        runSync(true);
-      } else {
-        runSync(false);
-      }
     });
   }
 

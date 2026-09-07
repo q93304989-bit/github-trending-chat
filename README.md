@@ -2,7 +2,7 @@
 
 一个极简的网页应用：以复古终端 / 黑客风的 CRT 界面，一键同步 GitHub 官方 Trending 的日榜 / 周榜 / 月榜。
 
-![Node](https://img.shields.io/badge/Node.js-18%2B-339933) ![Dependencies](https://img.shields.io/badge/dependencies-zero-brightgreen) ![Tests](https://img.shields.io/badge/tests-17%20passing-brightgreen)
+![Node](https://img.shields.io/badge/Node.js-18%2B-339933) ![Dependencies](https://img.shields.io/badge/dependencies-zero-brightgreen) ![Tests](https://img.shields.io/badge/tests-31%20passing-brightgreen)
 
 ![界面预览](docs/screenshot.png)
 
@@ -74,7 +74,7 @@ public/
   app.js           # 自动加载、本地兜底、榜单切换、快捷键、重试
   render.js        # 仓库卡片渲染（UMD，可单测）
   demo.js          # 宣传截图专用演示模式（#/demo/cards|loading[/tall]），日常使用不激活
-test/              # 单元与集成测试（30 个，含 FIXLIST 回归）
+test/              # 单元与集成测试（31 个，含 FIXLIST 回归）
 一键启动.vbs       # Windows 一键启动（端口就绪轮询 + 失败弹窗）
 docs/screenshot.png # 界面预览图
 ```

@@ -167,6 +167,8 @@ body::after {
   font-family: inherit; font-size: 11px; letter-spacing: .5px;
   color: var(--dim); background: none;
   border: none; cursor: pointer; padding: 2px 4px;
+  min-width: 11ch;              /* I2 · 等宽预留 [ COPIED ]，COPY 反馈不再推动布局 */
+  text-align: center;
 }
 .mini:hover { color: var(--bright); text-shadow: var(--glow); }
 .desc { color: var(--ink); opacity: .82; font-size: 13px; margin-top: 4px; line-height: 1.6; }
@@ -467,88 +469,102 @@ body.is-syncing #sync-btn { animation: btn-breathe 1.4s ease-in-out infinite; }
 
 
 /* ============================================================
-   SIDE STAGE · crossing words on z-depth rails (>=1360px)
-   Movement rides LEFT/RIGHT only - running transform animations
-   flatten preserve-3d subtrees in Blink, so the depth ladder lives
-   entirely in static transforms beneath a fixed viewport-stage.
+   SIDE STAGE · 侧幅文字透视循环动画（自己改：请直接看这里）
+   ------------------------------------------------------------
+   效果：GITHUB / RANKING 从屏幕外"驶入"屏幕中心 → 缩小到几乎
+   看不见 → 消失 → 再从屏幕外重生，18s 循环。
+
+   ⭐ 调参速查（改完保存后刷新浏览器即生效）：
+   · 整体速度     .m-left / .m-right 的 18s（数字越大越慢、越小越快）
+   · 文字倾斜     rotateY(±34deg)：
+                 ±34°=当前效果（像贴在斜跑道上，外侧大/中心小）；
+                 ±50~60°=更陡、透视更夸张；0°=整词正对镜头（会变回"平面横滑"）
+   · 进入多大     0%~42% 的 translate3d 第 3 个值（140/120/80px，为 60fps 压到近距离）：
+                 越大=越靠近镜头=越大；不要超过 perspective 520（会穿到镜头后翻转）
+   · 中心多小     66% 的 translateZ -6200px（约 0.08 倍）；越负越小
+   · 消失时机     58% 的 opacity .22 → 66% 的 opacity 0（改这里调淡出的早晚/快慢）
+   · 移动节奏     各百分比的第 1 个值（-115%→-20%→20%→45%）：
+                 % 是相对"词自身宽度"，-115%=整词在屏幕外左侧
+   · 消失后空档   66%→100% 是停歇（现在约 4s）；想不间断就把 100%
+                 改成靠前的百分比（如 75%），循环会明显变快
+   · 左右镜像     enter-r 与 enter-l 互为数学镜像（X 取反 + rotateY 取反），
+                 左词改了大小时记得同步右词，否则左右不对称
+   ------------------------------------------------------------
+   注意（一般不要动）：
+   · 58%/66%/100% 的 calc(50vw - 50%) / calc(50% - 50vw) 是"词中心
+     钉在屏幕中心"的对齐公式，删掉会偏位。
+   · font-size: 104px 刻意固定：大小全部来自 perspective + translateZ
+     的真实投影；改字号会把左右两侧的比例一起改掉。
    ============================================================ */
 .side-stage {
   position: fixed; inset: 0; pointer-events: none;
-  perspective: 520px;              /* origin defaults to viewport center */
+  perspective: 520px;              /* 透视"摄像机"视距：越小透视越夸张、越大越平 */
+  overflow: hidden;                /* P2-fps · 屏幕外的超大词体裁剪掉，避免超大图层栅格化 */
+  contain: paint;                  /* P2-fps · 裁剪+隔离绘制，保合成器 60fps */
 }
 .marquee {
-  position: absolute; top: 50%; transform: translateY(-52%);
+  position: absolute; top: 50%;
+  transform: translateY(-52%);     /* 垂直居中锚点；动画里的 -52% 与此保持一致 */
+  will-change: transform;          /* P2 · 侧幅高频 3D 动画提升渲染层，避免反复 raster */
   white-space: nowrap; user-select: none;
   font-family: 'BigBlue Term', var(--font); font-weight: 400;
-  transform-style: preserve-3d;
 }
-.m-left  { left: 0;    animation: fly-l 16s linear infinite; }
-.m-right { right: 0;   animation: fly-r 16s linear infinite; }
+/* 18s = 一轮"屏外→中心消失→重生"的时长；改 speed 就改这里（数字越大越慢） */
+.m-left  { left: 0;  animation: enter-l 18s linear infinite; }   /* 左词从左侧屏外驶入 */
+.m-right { right: 0; animation: enter-r 18s linear infinite; }   /* 右词从右侧屏外驶入（镜像） */
 
-.saw { display: inline-flex; align-items: baseline; gap: 26px; transform-style: preserve-3d; }
+.saw { display: inline-flex; align-items: baseline; gap: 26px; } /* 字母间距：26px */
 .sa { line-height: 1; font-size: 104px; color: var(--ink);
   text-shadow: -1px 1px 0 #2a7a4c, -2px 2px 0 #266f45, -3px 3px 0 #22643e,
     -4px 4px 0 #1e5937, 0 0 18px rgba(80, 255, 140, .28);
-  transform: translateZ(var(--z, 0px));
-  animation: sa-flicker 5.2s ease-in-out infinite, depth-wave 8s ease-in-out infinite;
-  animation-delay: var(--fd, 0s), var(--wd, 0s);
+  animation: sa-flicker 5.2s ease-in-out infinite;   /* 单字母辉光闪烁（风格装饰） */
 }
 .m-right .sa {
   text-shadow: 1px 1px 0 #2a7a4c, 2px 2px 0 #266f45, 3px 3px 0 #22643e,
     4px 4px 0 #1e5937, 0 0 18px rgba(80, 255, 140, .28); }
-.sa:nth-child(2n) { animation-duration: 6.4s; animation-delay: -2.1s; }
-.sa:nth-child(3n) { animation-duration: 4.3s; animation-delay: -3.7s; }
-.sa.hi { color: var(--bright); }
+.sa:nth-child(2n) { animation-duration: 6.4s; animation-delay: -2.1s; } /* 随机感：偶数位字母闪得不一样 */
+.sa:nth-child(3n) { animation-duration: 4.3s; animation-delay: -3.7s; } /* 随机感：第3/6位字母 */
+.sa.hi { color: var(--bright); }                       /* 高亮字母（html 里加了 hi 类的） */
 
-/* z-depth rails as per-letter variables: static base + breathing wave
-   (leaf-level transform animation projects fine - verified) */
-.m-left .sa:nth-child(1) { --z: 0px; }
-.m-left .sa:nth-child(2) { --z: -170px; }
-.m-left .sa:nth-child(3) { --z: -340px; }
-.m-left .sa:nth-child(4) { --z: -510px; }
-.m-left .sa:nth-child(5) { --z: -680px; }
-.m-left .sa:nth-child(6) { transform: none; --z: -850px; }
-.m-right .sa:nth-child(1) { --z: -1020px; }
-.m-right .sa:nth-child(2) { --z: -850px; }
-.m-right .sa:nth-child(3) { --z: -680px; }
-.m-right .sa:nth-child(4) { --z: -510px; }
-.m-right .sa:nth-child(5) { --z: -340px; }
-.m-right .sa:nth-child(6) { --z: -170px; }
-.m-right .sa:nth-child(7) { transform: none; --z: 0px; }
-/* wave phase offsets: ripple travels from the outer edge inward */
-.m-left .sa:nth-child(2) { --fd: -0.2s; --wd: -0.9s; }
-.m-left .sa:nth-child(3) { --fd: -0.4s; --wd: -1.8s; }
-.m-left .sa:nth-child(4) { --fd: -0.6s; --wd: -2.7s; }
-.m-left .sa:nth-child(5) { --fd: -0.8s; --wd: -3.6s; }
-.m-left .sa:nth-child(6) { --fd: -1s;   --wd: -4.5s; }
-.m-right .sa:nth-child(7) { --fd: -0.2s; --wd: -0.9s; }
-.m-right .sa:nth-child(6) { --fd: -0.4s; --wd: -1.8s; }
-.m-right .sa:nth-child(5) { --fd: -0.6s; --wd: -2.7s; }
-.m-right .sa:nth-child(4) { --fd: -0.8s; --wd: -3.6s; }
-.m-right .sa:nth-child(3) { --fd: -1s;   --wd: -4.5s; }
-.m-right .sa:nth-child(2) { --fd: -1.2s; --wd: -5.4s; }
-.m-right .sa:nth-child(1) { --fd: -1.4s; --wd: -6.3s; }
-
-@keyframes depth-wave {
-  0%, 100% { transform: translateZ(calc(var(--z, 0px))); }
-  50%      { transform: translateZ(calc(var(--z, 0px) + 180px)); }
+/* ============================================================
+   enter-l / enter-r = 两个词的飞行轨迹（一行一个关键帧）
+   translate3d(x%, -52%, zpx)：x=左右位置（%相对词自身宽度），
+   z=离镜头距离（正=近/大，负=远/小）。rotateY/rotateX 是文字斜置角。
+   ============================================================ */
+@keyframes enter-l {
+  /* 0%  · 整词在屏幕外左侧；z=140 近距=大（压到安全区保 60fps），opacity 0 看不见 */
+  0%   { transform: translate3d(-115%, -52%, 140px) rotateY(50deg) rotateX(4deg);           opacity: 0; }
+  /* 6%  · 淡入开始（此时还在屏外，防止"突然闪出"） */
+  6%   { opacity: 1; }
+  /* 30% · 词滑到屏幕边缘，仍保持近距离=大（想"刚进入更大"就调大 z） */
+  30%  { transform: translate3d(-20%, -52%, 120px) rotateY(50deg) rotateX(4deg); }
+  /* 42% · 整词基本进入侧翼，仍是近距离 */
+  42%  { transform: translate3d(20%, -52%, 80px) rotateY(50deg) rotateX(4deg); }
+  /* 50% · 开始向中心下沉：z 变负=远离镜头，大小快速下降 */
+  50%  { transform: translate3d(45%, -52%, -140px) rotateY(50deg) rotateX(4deg); }
+  /* 58% · 词中心到达屏幕中心；z=-4200≈0.11 倍；opacity .22 若隐若现 */
+  58%  { transform: translate3d(calc(50vw - 50%), -52%, -4200px) rotateY(50deg) rotateX(4deg); opacity: .22; }
+  /* 66% · 中心点"彻底消失"（继续远去+淡出），从这里到 100% 都不可见 */
+  66%  { transform: translate3d(calc(50vw - 50%), -52%, -6200px) rotateY(50deg) rotateX(4deg); opacity: 0; }
+  /* 100%· 停在中心隐藏；与 0% 无缝循环，保证重生瞬间不被看到 */
+  100% { transform: translate3d(calc(50vw - 50%), -52%, -6200px) rotateY(50deg) rotateX(4deg); opacity: 0; }
 }
-@keyframes fly-l {
-  0%   { left: -46vw; opacity: 0; }
-  7%   { opacity: 1; }
-  93%  { opacity: 1; }
-  100% { left: 112vw; opacity: 0; }
+@keyframes enter-r {
+  /* 与 enter-l 完全镜像：X 取反、rotateY 取反（右侧字母的透视方向相反） */
+  0%   { transform: translate3d(115%, -52%, 140px) rotateY(-50deg) rotateX(4deg);           opacity: 0; }
+  6%   { opacity: 1; }
+  30%  { transform: translate3d(20%, -52%, 120px) rotateY(-50deg) rotateX(4deg); }
+  42%  { transform: translate3d(-20%, -52%, 80px) rotateY(-50deg) rotateX(4deg); }
+  50%  { transform: translate3d(-45%, -52%, -140px) rotateY(-50deg) rotateX(4deg); }
+  58%  { transform: translate3d(calc(50% - 50vw), -52%, -4200px) rotateY(-50deg) rotateX(4deg); opacity: .22; }
+  66%  { transform: translate3d(calc(50% - 50vw), -52%, -6200px) rotateY(-50deg) rotateX(4deg); opacity: 0; }
+  100% { transform: translate3d(calc(50% - 50vw), -52%, -6200px) rotateY(-50deg) rotateX(4deg); opacity: 0; }
 }
-@keyframes fly-r {
-  0%   { right: -54vw; opacity: 0; }
-  7%   { opacity: 1; }
-  93%  { opacity: 1; }
-  100% { right: 120vw; opacity: 0; }
-}
+/* 字母闪烁改用 opacity：filter(brightness) 会强制每帧重绘，opacity 走合成器、不动图层内容 */
 @keyframes sa-flicker {
-  0%, 44%, 56%, 100% { filter: brightness(1); }
-  50% { filter: brightness(.72); }
-  78% { filter: brightness(.9); }
+  0%, 44%, 56%, 100% { opacity: 1; }
+  50% { opacity: .82; }
+  78% { opacity: .94; }
 }
 
 @media (max-width: 1359.98px) {
