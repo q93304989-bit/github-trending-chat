@@ -53,6 +53,10 @@ async function fetchDaily() {
   return items;
 }
 
+/* github.com 会陷入持续数分钟的瞬时黑洞（连接稳定 ~10s 断开），
+ * 短间隔重试无效，必须逐级退避把重试窗口拉到分钟级。 */
+const BACKOFF_MS = [2000, 15000, 30000, 45000, 60000];
+
 async function fetchWithRetry(attempts) {
   let lastErr;
   for (let i = 1; i <= attempts; i++) {
@@ -61,8 +65,9 @@ async function fetchWithRetry(attempts) {
     } catch (err) {
       lastErr = err;
       if (i < attempts) {
-        console.warn(`[digest] 第 ${i} 次抓取失败（${err.message}），2s 后重试`);
-        await new Promise((r) => setTimeout(r, 2000));
+        const wait = BACKOFF_MS[Math.min(i - 1, BACKOFF_MS.length - 1)];
+        console.warn(`[digest] 第 ${i} 次抓取失败（${err.message}），${wait / 1000}s 后重试`);
+        await new Promise((r) => setTimeout(r, wait));
       }
     }
   }
@@ -149,7 +154,7 @@ function pushWithRetry() {
   const doPush = process.argv.includes('--push');
   const date = localDate();
 
-  const items = await fetchWithRetry(3);
+  const items = await fetchWithRetry(5);
   const md = buildMarkdown(items, date);
 
   const dir = path.join(OUT_ROOT, date.y + '年', date.m + '月');
