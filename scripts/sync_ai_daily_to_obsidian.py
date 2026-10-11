@@ -56,6 +56,9 @@ def main() -> int:
             cand = m2.group(1).strip()
             if cand in GENERIC or "附注" in cand or "来源" in cand or "原则" in cand:
                 continue
+            # 跳过「一、今日要点」这类层级小节标题（取真正的第一条主选题）
+            if re.match(r"^[一二三四五六七八九十]+[、.．]", cand) or "要点" in cand:
+                continue
             first_item = cand
             break
 
